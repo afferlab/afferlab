@@ -1,0 +1,16 @@
+{
+  "title": "Context API",
+  "pages": [
+    "what-is-context-api",
+    "ctx-input",
+    "ctx-history",
+    "ctx-message",
+    "ctx-config",
+    "ctx-budget",
+    "ctx-capabilities",
+    "ctx-model",
+    "ctx-slots",
+    "ctx-tools",
+    "ctx-utils"
+  ]
+}

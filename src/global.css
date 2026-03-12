@@ -1,0 +1,618 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@font-face {
+    font-family: "Manrope";
+    src: url("/fonts/Manrope-Variable.woff2") format("woff2-variations");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "JetBrains Mono";
+    src: url("/fonts/JetBrainsMono-Regular.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* shadcn dark variant */
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --font-sans: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --ui-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --ui-fast: 120ms;
+    --ui-base: 160ms;
+    --ui-panel: 200ms;
+
+    /* -----------------------------
+       Legacy app semantic tokens (keep)
+    ----------------------------- */
+    --radius-md: 10px;
+    --color-bg-chatarea: var(--app-bg-chatarea);
+    --color-bg-topbar: var(--app-bg-topbar);
+    --color-bg-sidebar: var(--app-bg-sidebar);
+    --color-bg-inputarea: var(--app-bg-inputarea);
+    --color-bg-messagebubble-user: var(--app-bg-messagebubble-user);
+    --color-bg-messagebubble-assistant: var(--app-bg-messagebubble-assistant);
+
+    --color-bg-sidebar-button-hover: var(--app-bg-sidebar-button-hover);
+    --color-bg-sidebar-button-active: var(--app-bg-sidebar-button-active);
+    --color-bg-iconbutton-button-hover: var(--app-bg-iconbutton-button-hover);
+    --color-bg-iconbutton-button-active: var(--app-bg-iconbutton-button-active);
+
+    --color-bg-setting-card: var(--app-bg-setting-card);
+    --color-bg-dropdown: var(--app-bg-dropdown);
+
+    --color-bg-field: var(--app-bg-field);
+
+    --color-tx: var(--app-tx);
+    --color-border: var(--app-border);
+
+    /* -----------------------------
+       shadcn tokens (keep)
+    ----------------------------- */
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --color-brand: var(--primary);
+
+    /* -----------------------------
+       New surface system (recommended)
+       Use: bg-surface-app / panel / card / float
+    ----------------------------- */
+    --color-surface-app: var(--surface-app);
+    --color-surface-panel: var(--surface-panel);
+    --color-surface-card: var(--surface-card);
+    --color-surface-float: var(--surface-float);
+
+    --color-surface-hover: var(--surface-hover);
+    --color-surface-active: var(--surface-active);
+
+    --color-success-bg: var(--success-bg);
+    --color-success-fg: var(--success-fg);
+    --color-warning-bg: var(--warning-bg);
+    --color-warning-fg: var(--warning-fg);
+    --color-error-bg: var(--error-bg);
+    --color-error-fg: var(--error-fg);
+
+    /* -----------------------------
+       Markdown (keep)
+    ----------------------------- */
+    --md-text: var(--app-md-text);
+    --md-link: var(--app-md-link);
+
+    --md-inline-code-bg: var(--app-md-inline-code-bg);
+    --md-inline-code-border: var(--app-md-inline-code-border);
+
+    --md-pre-bg: var(--app-md-pre-bg);
+    --md-pre-border: var(--app-md-pre-border);
+
+    --md-blockquote-border: var(--app-md-blockquote-border);
+    --md-blockquote-text: var(--app-md-blockquote-text);
+
+    --md-table-border: var(--app-md-table-border);
+    --md-table-head-bg: var(--app-md-table-head-bg);
+
+    --color-capability-vision-bg: var(--capability-vision-bg);
+    --color-capability-vision-fg: var(--capability-vision-fg);
+
+    --color-capability-tools-bg: var(--capability-tools-bg);
+    --color-capability-tools-fg: var(--capability-tools-fg);
+
+    --color-capability-reasoning-bg: var(--capability-reasoning-bg);
+    --color-capability-reasoning-fg: var(--capability-reasoning-fg);
+
+    --color-capability-search-bg: var(--capability-search-bg);
+    --color-capability-search-fg: var(--capability-search-fg);
+}
+
+/* ----------------------------------------
+   Global basics
+---------------------------------------- */
+html, body, #root {
+    height: 100%;
+    background: transparent !important;
+    overflow: visible !important;
+}
+
+body {
+    background: transparent; /* Electron window */
+    -webkit-font-smoothing: antialiased;
+    font-family: var(--font-sans);
+    letter-spacing: -0.01em;
+}
+
+#root {
+    font-weight: 600;
+}
+
+.message-bubble-content {
+    font-weight: 400;
+}
+
+pre,
+code,
+kbd,
+samp,
+.font-mono {
+    font-family: var(--font-mono);
+    letter-spacing: normal;
+}
+
+/* ----------------------------------------
+   Base tokens (shadcn neutral + app semantic)
+---------------------------------------- */
+:root {
+    /* -----------------------------
+       Radii system (Apple-ish)
+    ----------------------------- */
+    --radius: 0.625rem;            /* shadcn default (keep) */
+    --radius-control: 14px;        /* inputs/buttons */
+    --radius-card: 18px;           /* cards/panels */
+    --radius-float: 20px;          /* popover/dialog */
+
+    /* -----------------------------
+       Shadows system (2 levels only)
+    ----------------------------- */
+    --shadow-card: 0 10px 30px rgba(0,0,0,0.06);
+    --shadow-float: 0 20px 60px rgba(0,0,0,0.12);
+
+    /* -----------------------------
+       shadcn tokens (neutral)
+    ----------------------------- */
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+
+    --destructive: oklch(0.577 0.245 27.325);
+    --status-active: var(--status-active-g);
+
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+
+    /* -----------------------------
+       App semantic tokens (existing)
+    ----------------------------- */
+    --app-bg-chatarea: #FFFFFF;
+    --app-bg-topbar: #FFFFFF;
+    --app-bg-sidebar: #F7F7F8;
+    --app-bg-inputarea: #FFFFFF;
+    --app-bg-messagebubble-user: #f4f4f4;
+    --app-bg-messagebubble-assistant: #FFFFFF;
+
+    --app-bg-sidebar-button-hover: #F0F0F0;
+    --app-bg-sidebar-button-active: #EAEAEA;
+
+    --app-bg-iconbutton-button-hover: #F0F0F0;
+    --app-bg-iconbutton-button-active: #EAEAEA;
+
+    --app-bg-setting-card: while;
+    --app-bg-dropdown: #f7f7f8;
+
+    --app-bg-field: var(--input);
+
+    --app-tx: #222222;
+    --app-border: #F2F2F2;
+
+    /* -----------------------------
+       Surface system (derived)
+       (These are the ones you should use everywhere)
+    ----------------------------- */
+    --surface-app: var(--app-bg-chatarea);
+    --surface-panel: var(--app-bg-sidebar);
+
+    /* card/float are slightly “lifted” from panel */
+    --surface-card: color-mix(in srgb, var(--surface-panel) 92%, white);
+    --surface-float: color-mix(in srgb, var(--surface-panel) 88%, white);
+
+    --surface-hover: color-mix(in srgb, var(--surface-panel) 84%, white);
+    --surface-active: color-mix(in srgb, var(--surface-panel) 78%, white);
+
+    --success-bg: #e6f9f0;
+    --success-fg: #047857;
+
+    --warning-bg: #fff7ed;
+    --warning-fg: #c2410c;
+
+    --error-bg: #fee2e2;
+    --error-fg: #b91c1c;
+
+    --status-active-g: #10b981;
+
+    /* -----------------------------
+       Markdown tokens (keep)
+    ----------------------------- */
+    --app-md-text: var(--foreground);
+    --app-md-link: var(--primary);
+
+    --app-md-inline-code-bg: var(--muted);
+    --app-md-inline-code-border: var(--border);
+
+    --app-md-pre-bg: var(--muted);
+    --app-md-pre-border: var(--border);
+
+    --app-md-blockquote-border: var(--border);
+    --app-md-blockquote-text: var(--muted-foreground);
+
+    --app-md-table-border: var(--border);
+    --app-md-table-head-bg: var(--muted);
+
+    /* Markdown tokens used directly by CSS */
+    --md-text: var(--app-md-text);
+    --md-link: var(--app-md-link);
+    --md-inline-code-bg: var(--app-md-inline-code-bg);
+    --md-inline-code-border: var(--app-md-inline-code-border);
+    --md-pre-bg: var(--app-md-pre-bg);
+    --md-pre-border: var(--app-md-pre-border);
+    --md-blockquote-border: var(--app-md-blockquote-border);
+    --md-blockquote-text: var(--app-md-blockquote-text);
+    --md-table-border: var(--app-md-table-border);
+    --md-table-head-bg: var(--app-md-table-head-bg);
+
+    /* Vision */
+    --capability-vision-bg: #e8f1ff;
+    --capability-vision-fg: #1d4ed8;
+
+    /* Tools */
+    --capability-tools-bg: #fff4e5;
+    --capability-tools-fg: #b45309;
+
+    /* Reasoning */
+    --capability-reasoning-bg: #f1ecff;
+    --capability-reasoning-fg: #6d28d9;
+
+    /* Search */
+    --capability-search-bg: #e6f9f0;
+    --capability-search-fg: #047857;
+}
+
+.dark {
+    /* Radii/shadows same in dark */
+    --shadow-card: 0 10px 30px rgba(0,0,0,0.35);
+    --shadow-float: 0 20px 60px rgba(0,0,0,0.55);
+
+    /* Existing dark semantic tokens */
+    --app-bg-chatarea: rgba(20,20,20,1);
+    --app-bg-topbar: rgba(20,20,20,1);     /* #1A1A1A */
+    --app-bg-sidebar: rgba(26,26,26,1);    /* #1E1E1E */
+    --app-bg-inputarea: rgba(28,28,28,1);  /* #222222 */
+    --app-bg-messagebubble-user: rgba(55,55,55,1);
+    --app-bg-messagebubble-assistant: rgba(20,20,20,1);
+
+    --app-bg-sidebar-button-hover: rgba(34,34,34,1);   /* #242424 */
+    --app-bg-sidebar-button-active: rgba(36,36,36,1);  /* #2A2A2A */
+
+    /* IconButton (small circular button, such as + / globe / send) */
+    --app-bg-iconbutton-button-hover: rgba(38,38,38,1);  /* #262626 */
+    --app-bg-iconbutton-button-active: rgba(44,44,44,1); /* #2C2C2C */
+
+    --app-bg-setting-card: rgba(19,19,19,1);
+    --app-bg-dropdown: #1a1a1a;
+
+    --app-bg-field: rgba(16,16,16,1);
+
+    --app-tx: #f5f5f5;
+    --app-border: rgba(255,255,255,0.08);
+
+    /* shadcn dark tokens (keep) */
+    --background: #181818;
+    --foreground: oklch(0.985 0 0);
+
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+
+    --popover: oklch(0.269 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+
+    --primary: oklch(0.922 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+
+    --accent: oklch(0.371 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+
+    --destructive: oklch(0.704 0.191 22.216);
+
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.556 0 0);
+
+    /* Surface derived (dark) */
+    --surface-app: var(--app-bg-chatarea);
+    --surface-panel: var(--app-bg-sidebar);
+
+    --surface-card: color-mix(in srgb, var(--surface-panel) 92%, black);
+    --surface-float: color-mix(in srgb, var(--surface-panel) 88%, black);
+
+    --surface-hover: color-mix(in srgb, var(--surface-panel) 84%, black);
+    --surface-active: color-mix(in srgb, var(--surface-panel) 78%, black);
+
+    --success-bg: #064e3b;
+    --success-fg: #a7f3d0;
+
+    --warning-bg: #3b2f1e;
+    --warning-fg: #fdba74;
+
+    --error-bg: #3f1d1d;
+    --error-fg: #fca5a5;
+
+    --status-active-g: #34d399;
+
+    /* Vision */
+    --capability-vision-bg: #1e293b;
+    --capability-vision-fg: #60a5fa;
+
+    /* Tools */
+    --capability-tools-bg: #3a2a1f;
+    --capability-tools-fg: #f59e0b;
+
+    /* Reasoning */
+    --capability-reasoning-bg: #2c2443;
+    --capability-reasoning-fg: #a78bfa;
+
+    /* Search */
+    --capability-search-bg: #1e3a2f;
+    --capability-search-fg: #34d399;
+}
+
+/* ----------------------------------------
+   Utility classes (CSS, not tailwind)
+   You can use these as plain className too.
+---------------------------------------- */
+.shadow-card { box-shadow: var(--shadow-card); }
+.shadow-float { box-shadow: var(--shadow-float); }
+
+.rounded-control { border-radius: var(--radius-control); }
+.rounded-card { border-radius: var(--radius-card); }
+.rounded-float { border-radius: var(--radius-float); }
+
+/* ----------------------------------------
+   Interaction motion system
+---------------------------------------- */
+.ui-fast {
+    transition-duration: var(--ui-fast);
+    transition-timing-function: var(--ui-ease);
+}
+
+.ui-base {
+    transition-duration: var(--ui-base);
+    transition-timing-function: var(--ui-ease);
+}
+
+.ui-panel {
+    transition-duration: var(--ui-panel);
+    transition-timing-function: var(--ui-ease);
+}
+
+.ui-fade {
+    transition-property: opacity;
+    transition-duration: var(--ui-base);
+    transition-timing-function: var(--ui-ease);
+}
+
+.ui-press {
+    transition-property: transform;
+    transition-duration: var(--ui-fast);
+    transition-timing-function: var(--ui-ease);
+    transform: translateZ(0);
+}
+
+.ui-press:active {
+    transform: scale(0.98);
+}
+
+.ui-press:disabled,
+.ui-press[aria-disabled="true"],
+.ui-press[data-state="disabled"] {
+    transform: none;
+}
+
+.ui-panel-motion {
+    transition-property: opacity, transform;
+    transition-duration: var(--ui-panel);
+    transition-timing-function: var(--ui-ease);
+}
+
+.ui-panel-motion[data-state="open"] {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.ui-panel-motion[data-state="closed"] {
+    opacity: 0;
+    transform: scale(0.98);
+}
+
+.ui-overlay-motion {
+    transition-property: opacity;
+    transition-duration: var(--ui-panel);
+    transition-timing-function: var(--ui-ease);
+}
+
+.ui-overlay-motion[data-state="open"] {
+    opacity: 1;
+}
+
+.ui-overlay-motion[data-state="closed"] {
+    opacity: 0;
+}
+
+/* ----------------------------------------
+   Scrollbars
+---------------------------------------- */
+.scrollbar-chat {
+    scrollbar-gutter: stable both-edges;
+    scrollbar-color: rgba(120,120,120,.6) transparent;
+}
+.scrollbar-chat:hover {
+    scrollbar-color: rgba(120,120,120,.75) transparent;
+}
+.scrollbar-sidebar {
+    scrollbar-gutter: auto;
+    scrollbar-color: rgba(120,120,120,.6) transparent;
+}
+.scrollbar-sidebar:hover {
+    scrollbar-color: rgba(120,120,120,.75) transparent;
+}
+.scrollbar-hidden {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+}
+.scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    background: transparent;
+}
+.scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+    border: none;
+}
+.scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(120,120,120,.6);
+    border-radius: 4px;
+    border: none;
+    background-clip: padding-box;
+}
+.scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(120,120,120,.75);
+    border: none;
+}
+
+/* ----------------------------------------
+   Markdown
+---------------------------------------- */
+.markdown-content {
+    color: var(--md-text);
+    line-height: 1.65;
+    font-size: 15px;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+.markdown-paragraph { margin: 0.35rem 0; }
+.markdown-h1, .markdown-h2, .markdown-h3 {
+    margin: 0.75rem 0 0.35rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+}
+.markdown-h1 { font-size: 1.20rem; }
+.markdown-h2 { font-size: 1.08rem; }
+.markdown-h3 { font-size: 1.00rem; }
+.markdown-link {
+    color: var(--md-link);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    word-break: break-word;
+}
+.markdown-ul, .markdown-ol {
+    padding-left: 1.25rem;
+    margin: 0.35rem 0;
+}
+.markdown-li { margin: 0.15rem 0; }
+.markdown-blockquote {
+    border-left: 3px solid var(--md-blockquote-border);
+    padding-left: 0.75rem;
+    margin: 0.55rem 0;
+    color: var(--md-blockquote-text);
+    opacity: 0.95;
+}
+.markdown-code {
+    background: var(--md-inline-code-bg);
+    border: 1px solid var(--md-inline-code-border);
+    padding: 0.10rem 0.35rem;
+    border-radius: 8px;
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+}
+.markdown-pre {
+    background: var(--md-pre-bg);
+    border: 1px solid var(--md-pre-border);
+    padding: 0.85rem;
+    border-radius: 14px;
+    overflow-x: auto;
+    margin: 0.55rem 0;
+}
+.markdown-pre .markdown-code {
+    background: transparent;
+    border: none;
+    white-space: pre;
+    padding: 0;
+    border-radius: 0;
+    font-size: 0.93em;
+}
+.markdown-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.6rem 0;
+    font-size: 0.95em;
+}
+.markdown-th, .markdown-td {
+    border: 1px solid var(--md-table-border);
+    padding: 0.45rem 0.65rem;
+    text-align: left;
+    vertical-align: top;
+}
+.markdown-thead { background: var(--md-table-head-bg); }
+.markdown-tr:nth-child(even) .markdown-td {
+    background: color-mix(in srgb, var(--md-table-head-bg) 55%, transparent);
+}
+.markdown-content hr {
+    border: none;
+    height: 1px;
+    background: var(--md-table-border);
+    margin: 0.75rem 0;
+}
+@keyframes breathe {
+    0%, 100% { transform: scale(0.85); opacity: 0.45; }
+    50% { transform: scale(1.15); opacity: 0.95; }
+}
+.animate-breathe {
+    animation: breathe 1.1s ease-in-out infinite;
+}
+
+@keyframes looma-stream-reveal {
+    from { opacity: 0; transform: translateY(2px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.looma-stream-reveal {
+    animation: looma-stream-reveal 600ms ease-out;
+}

@@ -1,0 +1,12 @@
+{
+  "title": "Looma Docs",
+  "pages": [
+    "introduction",
+    "getting-started",
+    "using-looma",
+    "strategies",
+    "developing-strategies",
+    "context-api",
+    "architecture"
+  ]
+}

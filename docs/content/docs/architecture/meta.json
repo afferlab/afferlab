@@ -1,0 +1,4 @@
+{
+  "title": "Architecture",
+  "pages": ["system-overview", "strategy-engine", "worker-model"]
+}

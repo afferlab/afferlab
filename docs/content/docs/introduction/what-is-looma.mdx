@@ -1,0 +1,88 @@
+---
+title: What is Looma
+description: Looma is a local-first AI chat client where conversation behavior and context management are programmable.
+---
+
+#
+Most AI applications treat conversations as fixed systems.
+You can choose a model, but the application decides how prompts are built, how context is managed, and how tools are used.
+
+Looma takes a different approach.
+
+The platform provides the infrastructure — models, storage, and tools — while **strategies define how conversations work**.
+
+---
+
+## Conversations Are Context Systems
+
+Large language models are fundamentally **context-limited systems**.
+Every response depends on what information is placed into the prompt.
+This means every AI application must constantly answer questions like:
+
+- What conversation history should be included?
+- What information should be removed to fit token limits?
+- When should knowledge be retrieved?
+- When should the system call tools?
+
+Most applications hide this logic inside the product.
+
+Looma exposes it.
+
+---
+
+## Programmable Chat Flow
+
+In Looma, the behavior of a conversation is defined by a **strategy**.
+
+A strategy is a small TypeScript module that controls how the system interacts with the model.
+
+Strategies define the **chat flow** of a conversation:
+
+- how prompts are constructed
+- which context should be included
+- how history is selected
+- when tools are used
+- when memories are written or retrieved
+- and everything...
+
+Because strategies run inside an isolated engine, they can extend the system without modifying the core application.
+
+---
+
+## Local-First by Design
+
+Looma is designed around a **local-first architecture**.
+
+Conversations, files, and indexes are stored locally using a single local file.
+This keeps the system fast and private while still allowing cloud models when needed.
+
+The platform handles the heavy infrastructure work:
+
+- model provider integration
+- token budgeting
+- tool execution
+- file ingestion
+- retrieval-augmented generation
+
+Strategies only focus on defining conversation behavior.
+
+---
+
+## System Architecture
+
+Looma is organized into three layers.
+
+**Host Platform**
+
+Handles the UI, database, model APIs, and system lifecycle.
+
+**Strategy Engine**
+
+Runs programmable strategies inside isolated worker threads.
+
+**Memory & Ingest System**
+
+Manages document ingestion, vector indexing, and semantic search.
+
+#
+#

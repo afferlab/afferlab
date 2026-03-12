@@ -1,0 +1,67 @@
+---
+title: What is Context API
+---
+
+#
+
+In Looma, a **strategy is defined by a TypeScript file** that controls how the conversation behaves.
+
+Inside that strategy file, Looma provides a special object called **`ctx`** (context).
+This object is the main interface used to interact with the system.
+
+---
+
+## Why Context Exists
+
+Strategies run in an isolated worker environment.
+Because of this isolation, they cannot directly access:
+
+- the database
+- model providers
+- system tools
+- the UI
+- memory storage
+
+The **Context API** acts as a bridge between the strategy runtime and the Looma host.
+
+All operations such as reading conversation history, calling models, or executing tools must go through the context API.
+
+---
+
+## The `ctx` Object
+
+This object exposes a set of APIs that allow the strategy to interact with the system.
+
+The context object includes the following modules:
+
+
+- `ctx.input`
+- `ctx.history`
+- `ctx.message`
+- `ctx.config`
+- `ctx.budget`
+- `ctx.capabilities`
+- `ctx.model`
+
+Each module provides a specific capability for working with conversations, models, and runtime behavior.
+
+---
+
+## Example
+
+A minimal strategy might use the Context API like this:
+
+```ts
+export async function run(ctx) {
+  const history = await ctx.history.get()
+
+  const result = await ctx.model.complete({
+    messages: history
+  })
+
+  return result
+}
+```
+
+#
+#

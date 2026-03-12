@@ -1,0 +1,3 @@
+Looma attachment regression fixture.
+
+This is plain text with multiple paragraphs.
