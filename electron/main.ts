@@ -13,7 +13,6 @@ import { getAppSettings } from './engine/settings/services/settingsStore'
 import { createMainWindow } from './app/main/createMainWindow'
 import { registerRuntime } from './app/bootstrap/registerRuntime'
 import { applyNativeTheme, isThemeSource, registerThemeIPC } from './app/theme/nativeTheme'
-import { Ingest } from './core/ingest'
 import { registerStrategies } from './strategies'
 
 dotenv.config()
@@ -129,19 +128,9 @@ app.whenReady().then(async () => {
   applyNativeTheme(isThemeSource(appSettings.theme_mode) ? appSettings.theme_mode : 'system')
 
   registerStrategies()
- 
+
   registerAllIPC()
 
   openMainWindow()
-
-  ;(async () => {
-    const bytes = new TextEncoder().encode('Hello\n世界  ')
-    const result = await Ingest.extractAuto(bytes, {
-      filename: 'note.txt',
-      mime: 'text/plain',
-    })
-    console.log('[ingest smoke]', result)
-  })()
 })
-
 
