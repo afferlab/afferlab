@@ -1,7 +1,30 @@
 ---
 title: ctx.utils
+description: ctx.utils contains small host-provided utility helpers available in every strategy context.
 ---
 
 # ctx.utils
 
-Coming soon.
+`ctx.utils` contains lightweight helpers that are safe to expose in every strategy context.
+
+## Current Helpers
+
+The live runtime currently provides:
+
+- `measure(text)`
+- `now()`
+- `uuid()`
+
+## What They Do
+
+- `measure(text)` returns an approximate token count
+- `now()` returns the current Unix epoch time in milliseconds
+- `uuid()` returns a random UUID
+
+## Recommended Use
+
+Use these helpers for:
+
+- quick token heuristics
+- timestamps in state or memory metadata
+- stable local identifiers for strategy-generated records

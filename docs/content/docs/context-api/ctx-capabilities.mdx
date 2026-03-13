@@ -1,7 +1,35 @@
 ---
 title: ctx.capabilities
+description: ctx.capabilities exposes the final model capability flags resolved for the current turn.
 ---
 
 # ctx.capabilities
 
-Coming soon.
+`ctx.capabilities` contains the final capability flags for the selected model on the current turn.
+
+## Current Fields
+
+The worker context currently exposes:
+
+- `vision`
+- `tools`
+- `structuredOutput`
+- `nativeFiles`
+- `attachmentTransport`
+- `supportedMimeTypes`
+- `maxFileSizeMB`
+- `maxFilesPerTurn`
+
+## Why This Matters
+
+These fields let a strategy branch on what the active model can really do.
+
+Examples:
+
+- only offer tools when `ctx.capabilities.tools` is true
+- only rely on file-native behavior when `ctx.capabilities.nativeFiles` is true
+- adjust attachment behavior based on `attachmentTransport`
+
+## Source of Truth
+
+These values are assembled from the resolved model config, not guessed inside the worker.

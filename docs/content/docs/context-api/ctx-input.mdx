@@ -1,7 +1,42 @@
 ---
 title: ctx.input
+description: ctx.input exposes the current user turn input that the host resolved from the database.
 ---
 
 # ctx.input
 
-Coming soon.
+`ctx.input` contains the current turn input that the host fetched for the strategy worker.
+
+## Shape
+
+Today, `ctx.input` contains:
+
+- `text`
+- `attachments`
+- `parts`
+
+`text` is the current user message text.
+
+`attachments` is the normalized list of turn attachments.
+
+`parts` is the parsed message-part payload when content parts are available.
+
+## Attachments
+
+Each attachment currently includes fields such as:
+
+- `id`
+- `name`
+- `size`
+- `ready`
+- `type`
+- `mimeType`
+- `tokens`
+
+This is the current worker-facing shape, not just a blueprint type.
+
+## Notes
+
+`ctx.input` is read-only from the strategy point of view.
+
+If a strategy wants to ingest new material into memory, that happens through `ctx.tools.memory.ingest(...)`, not by mutating `ctx.input`.

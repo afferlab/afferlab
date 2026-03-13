@@ -1,7 +1,59 @@
 ---
 title: Strategy File
+description: A Looma strategy is a single TypeScript module with exported metadata and hooks.
 ---
 
 # Strategy File
 
-Coming soon.
+A Looma strategy is currently a single `.ts` module loaded by the strategy worker.
+
+## Required Structure
+
+At minimum, a strategy file must export:
+
+- `meta`
+- `configSchema`
+- `onContextBuild`
+
+`onContextBuild` is the only required hook.
+
+## Minimal Example
+
+```ts
+import type { LoomaContext, StrategyContextBuildResult } from '@contracts'
+
+export const meta = {
+  name: 'My Strategy',
+  description: 'A custom Looma strategy.',
+  version: '0.1.0',
+}
+
+export const configSchema = []
+
+export async function onContextBuild(ctx: LoomaContext): Promise<StrategyContextBuildResult> {
+  const input = (ctx.input.text || '').trim()
+  const history = ctx.history.recent(8)
+
+  ctx.slots.add('system', { role: 'system', content: 'You are a helpful assistant.' })
+  if (history.length) ctx.slots.add('history', history, { trimBehavior: 'message' })
+  ctx.slots.add('input', { role: 'user', content: input || '(Empty input)' })
+
+  return {
+    prompt: ctx.slots.render(),
+    tools: [],
+  }
+}
+```
+
+## Optional Exports
+
+The worker loader currently recognizes:
+
+- `onInit`
+- `onTurnEnd`
+- `onReplayTurn`
+- `onCleanup`
+- `onError`
+- `onToolCall`
+
+You can export them either at module top level or through a `hooks` object. The loader normalizes both forms.

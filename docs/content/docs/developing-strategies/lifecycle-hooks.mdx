@@ -1,7 +1,48 @@
 ---
 title: Lifecycle Hooks
+description: Strategy hooks are invoked by the worker runtime during context build, turn end, replay, cleanup, and error handling.
 ---
 
 # Lifecycle Hooks
 
-Coming soon.
+Looma currently supports a small set of strategy hooks.
+
+## `onContextBuild`
+
+This is the required hook.
+
+It runs before the host starts the model stream and must return the prompt payload for the turn.
+
+## `onInit`
+
+If exported, `onInit` runs when the worker loads the strategy for runtime use.
+
+It is not a settings-page initialization hook.
+
+## `onTurnEnd`
+
+If exported, `onTurnEnd` runs after the host finishes writing the assistant message and prepares the turn-end context.
+
+This is where memory write or cleanup-style post-processing usually belongs.
+
+## `onReplayTurn`
+
+If exported, `onReplayTurn` is called during strategy replay jobs when the host replays existing turns for a conversation.
+
+## `onToolCall`
+
+If exported, `onToolCall` can handle a tool call inside the strategy runtime.
+
+If it is not exported, the host fallback tool execution path is used instead.
+
+## `onCleanup`
+
+If exported, `onCleanup` runs when the worker is disposed.
+
+Use it to release worker-local resources.
+
+## `onError`
+
+If exported, `onError` is called when a worker-side request throws.
+
+The runtime passes the last available context, the error, and the request phase.

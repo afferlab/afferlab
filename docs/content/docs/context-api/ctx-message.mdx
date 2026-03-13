@@ -1,7 +1,38 @@
 ---
 title: ctx.message
+description: ctx.message is populated for turn-end style hooks and is null during context build.
 ---
 
 # ctx.message
 
-Coming soon.
+`ctx.message` represents the current assistant message payload when the host invokes hooks that run after generation.
+
+## When It Exists
+
+In normal context-build execution, `ctx.message` is `null`.
+
+It is populated when the host invokes hooks such as `onTurnEnd`.
+
+## Current Fields
+
+The current runtime shape includes:
+
+- `id`
+- `content`
+- `status`
+- `toolCalls`
+- `finishReason`
+- `model`
+- `usage`
+- `errorCode`
+- `rawError`
+
+This data is assembled by the host from the persisted assistant row and related metadata.
+
+## Practical Use
+
+Strategies typically use `ctx.message` to decide whether to:
+
+- skip post-processing after aborted or failed turns
+- retire or write memory entries tied to a source message
+- inspect tool-call history after a turn completes

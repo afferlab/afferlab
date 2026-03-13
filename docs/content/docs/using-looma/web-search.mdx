@@ -1,7 +1,38 @@
 ---
 title: Web Search
+description: Web search is a host-owned capability that can be enabled in settings and used by compatible model/tool flows.
 ---
 
 # Web Search
 
-Coming soon.
+Web search in Looma is host-owned.
+
+Strategies do not open network windows directly. The host controls the web search path.
+
+## Current User Settings
+
+The settings UI currently exposes:
+
+- enable or disable web search
+- result limit
+- a fixed engine label shown as `Bing (Local)`
+
+## Runtime Behavior
+
+At runtime, Looma currently supports host-mediated search and fetch flows through built-in tools such as:
+
+- `builtin.web_search`
+- `builtin.web_fetch`
+
+There is also a host-side hidden-window HTML fetch path for approved search hosts.
+
+## Important Distinction
+
+Whether web search is actually used on a turn depends on all of these:
+
+- app-level web search settings
+- model capabilities
+- tool availability
+- strategy allowlist/tool exposure
+
+So enabling web search in settings does not force every turn to use it.

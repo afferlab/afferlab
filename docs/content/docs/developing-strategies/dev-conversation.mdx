@@ -1,7 +1,32 @@
 ---
 title: Dev Conversation
+description: A dev conversation is a normal conversation that is opened with a dev strategy attached.
 ---
 
 # Dev Conversation
 
-Coming soon.
+A dev conversation is not a separate runtime type.
+
+It is a normal Looma conversation that has been opened and assigned to a saved dev strategy.
+
+## What Happens When You Open One
+
+The current dev flow:
+
+1. saves or reloads a dev strategy bundle
+2. creates or opens a conversation
+3. switches that conversation to the dev strategy
+
+After that, the conversation uses the same host send pipeline as any other conversation.
+
+## Why This Matters
+
+This means dev strategies are tested in the real runtime path:
+
+- real IPC
+- real context build
+- real streaming
+- real persistence
+- real worker calls
+
+That is why dev conversations are more useful than a pure isolated preview.

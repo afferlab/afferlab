@@ -1,39 +1,32 @@
 ---
 title: What is Context API
+description: The Context API is the strategy-facing runtime object exposed inside strategy workers.
 ---
 
-#
+# What is Context API
 
-In Looma, a **strategy is defined by a TypeScript file** that controls how the conversation behaves.
+In Looma, strategies run inside isolated worker threads.
 
-Inside that strategy file, Looma provides a special object called **`ctx`** (context).
-This object is the main interface used to interact with the system.
+Inside that worker, the platform provides a single runtime object called `ctx`.
 
----
+`ctx` is the strategy-facing API for reading turn data, building prompts, accessing memory tools, and talking back to the host.
 
-## Why Context Exists
+## Why `ctx` Exists
 
-Strategies run in an isolated worker environment.
-Because of this isolation, they cannot directly access:
+Strategy code does not directly access:
 
-- the database
-- model providers
-- system tools
-- the UI
-- memory storage
+- the SQLite database
+- model provider clients
+- Electron APIs
+- renderer state
 
-The **Context API** acts as a bridge between the strategy runtime and the Looma host.
+Instead, the worker receives a safe host-mediated interface.
 
-All operations such as reading conversation history, calling models, or executing tools must go through the context API.
+That interface is `ctx`.
 
----
+## What `ctx` Includes
 
-## The `ctx` Object
-
-This object exposes a set of APIs that allow the strategy to interact with the system.
-
-The context object includes the following modules:
-
+The current runtime context includes:
 
 - `ctx.input`
 - `ctx.history`
@@ -42,26 +35,42 @@ The context object includes the following modules:
 - `ctx.budget`
 - `ctx.capabilities`
 - `ctx.model`
+- `ctx.slots`
+- `ctx.tools`
+- `ctx.utils`
 
-Each module provides a specific capability for working with conversations, models, and runtime behavior.
+Each of these sections is documented on its own page in this section.
 
----
+## Typical Usage
 
-## Example
+In the current codebase, the normal pattern is:
 
-A minimal strategy might use the Context API like this:
+1. read `ctx.input` and `ctx.history`
+2. add prompt pieces through `ctx.slots.add(...)`
+3. return `ctx.slots.render()`
+
+For example:
 
 ```ts
-export async function run(ctx) {
-  const history = await ctx.history.get()
+export async function onContextBuild(ctx) {
+  const text = ctx.input.text.trim()
+  const history = ctx.history.recent(8)
 
-  const result = await ctx.model.complete({
-    messages: history
-  })
+  ctx.slots.add('system', { role: 'system', content: 'You are a helpful assistant.' })
+  if (history.length) ctx.slots.add('history', history, { trimBehavior: 'message' })
+  ctx.slots.add('input', { role: 'user', content: text || '(Empty input)' })
 
-  return result
+  return {
+    prompt: ctx.slots.render(),
+    tools: [],
+  }
 }
 ```
 
-#
-#
+## What `ctx` Does Not Do
+
+`ctx` is not a direct database handle or provider SDK wrapper.
+
+For example, there is currently no `ctx.model.complete(...)` API.
+
+Model calls go through `ctx.tools.llm.call(...)` or `ctx.tools.llm.run(...)`.

@@ -318,6 +318,28 @@ Status as of 2026-03-12:
 2. `workers/strategy/*` and `infra/db/*` are now correctly visible as first-class runtime areas.
 3. IPC is mostly thin, but not fully thin.
 4. `engine` is the main runtime layer, but it still depends heavily on `core/*`.
+
+## Blueprint Gaps Observed During Documentation Verification
+
+The following points from `architecture/architecture.md` are not fully implemented in the current codebase and should be treated as future-looking rather than live behavior.
+
+1. Worker ownership is not "one long-lived worker per enabled strategy".
+   Current behavior is one worker runtime per active `conversationId`.
+
+2. `onInit` is not triggered simply because a strategy is opened in the settings UI.
+   It runs when the worker loads a strategy for runtime requests.
+
+3. `ctx.budget` is not currently a user-configurable strategy budget surface.
+   The host computes it from model limits/defaults and a fixed reserved-token value.
+
+4. `ctx.slots` does not currently enforce `maxRatio` or `minRatio` even though those fields exist in the public types.
+   The live implementation uses ordering, priority, trim behavior, and token-budget enforcement instead.
+
+5. Strategy switch semantics do not currently present a `Rebuild / Hide / Later` decision UI.
+   The host switches the strategy and schedules background reindexing directly.
+
+6. The repository is not yet split into a separate stable strategy SDK package plus a separate strategies repository.
+   Strategy types currently live inside this main repository.
 5. The largest remaining structural hotspot is `engine/chat/streaming/StreamManager.ts`.
 6. The largest remaining residual tech debt outside architecture shape is worker protocol typing.
 

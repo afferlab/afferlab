@@ -1,7 +1,41 @@
 ---
 title: ctx.history
+description: ctx.history provides host-fetched conversation history helpers for prompt building.
 ---
 
 # ctx.history
 
-Coming soon.
+`ctx.history` is a helper API over the conversation history returned by the host for the current turn.
+
+## Available Methods
+
+The current runtime supports:
+
+- `lastUser()`
+- `lastAssistant()`
+- `range({ fromEnd, toEnd })`
+- `recent(n)`
+- `byTokens(maxTokens)`
+- `asPlainText(message)`
+
+## Selection Semantics
+
+Selections are based on the host-fetched history array for the turn.
+
+- `recent(n)` returns the latest `n` messages
+- `range({ fromEnd, toEnd })` slices from the back of history
+- `byTokens(maxTokens)` walks backward and keeps messages until the token estimate budget is reached
+
+The selected messages are returned in old-to-new order.
+
+## Plain Text Conversion
+
+`asPlainText(message)` returns a text representation suitable for prompting or embedding.
+
+In the current implementation it preserves text content and uses attachment placeholders when needed.
+
+## Debug State
+
+Internally, the history helper also tracks selection debug state used by the dev inspector.
+
+That debug helper exists today, but it should be treated as diagnostic data rather than stable strategy API surface.

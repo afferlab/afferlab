@@ -1,7 +1,31 @@
 ---
 title: ctx.config
+description: ctx.config contains runtime-resolved strategy parameter values from strategy settings.
 ---
 
 # ctx.config
 
-Coming soon.
+`ctx.config` contains the resolved runtime values for the active strategy configuration.
+
+## Where It Comes From
+
+These values come from the strategy runtime config built by the host from:
+
+- the strategy manifest/schema
+- saved strategy parameter overrides
+- current conversation strategy selection
+
+## What It Is For
+
+Use `ctx.config` for strategy behavior toggles and numeric/string settings such as:
+
+- history depth
+- retrieval limits
+- prompt style options
+- feature toggles
+
+## What It Is Not
+
+`ctx.config` is not the model parameter surface.
+
+Model temperature, output token limits, and provider-level settings are not exposed here as a separate `ctx` config API today.

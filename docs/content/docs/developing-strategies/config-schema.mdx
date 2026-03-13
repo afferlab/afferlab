@@ -1,7 +1,35 @@
 ---
 title: Config Schema
+description: configSchema defines strategy-configurable fields that show up in the Looma strategy UI.
 ---
 
 # Config Schema
 
-Coming soon.
+`configSchema` is the static configuration schema exported by a strategy module.
+
+## What It Is Used For
+
+The host stores the schema in strategy metadata and uses it to render strategy configuration controls in the UI.
+
+Those saved values are then exposed to the strategy at runtime through `ctx.config`.
+
+## Current Constraints
+
+In the current implementation:
+
+- `configSchema` must be JSON-serializable
+- the dev sandbox validates that it can be serialized
+- the worker loader accepts it as optional metadata
+
+If serialization fails, the dev compile/test flow rejects the strategy.
+
+## Practical Guidance
+
+Use `configSchema` for strategy behavior settings such as:
+
+- retrieval limits
+- prompt style toggles
+- history depth
+- memory-related options
+
+Do not use it as a replacement for model-provider settings.

@@ -1,7 +1,38 @@
 ---
 title: ctx.budget
+description: ctx.budget exposes the host-computed token budget numbers for the current turn.
 ---
 
 # ctx.budget
 
-Coming soon.
+`ctx.budget` provides the token budget numbers computed before prompt construction.
+
+## Current Fields
+
+The current runtime exposes:
+
+- `maxInputTokens`
+- `maxOutputTokens`
+- `reservedTokens`
+- `remainingInputTokens`
+
+## How They Are Computed Today
+
+These values are derived from the selected model config plus host defaults.
+
+In the current implementation:
+
+- `maxInputTokens` comes from model limits/defaults
+- `maxOutputTokens` comes from model limits/defaults
+- `reservedTokens` is currently a fixed host reserve
+- `remainingInputTokens` is `maxInputTokens - reservedTokens`
+
+## What to Use It For
+
+Strategies should treat this as a read-only budgeting hint for prompt assembly.
+
+It is especially useful when deciding:
+
+- how much history to keep
+- whether to include large memory blocks
+- how aggressively to trim context before rendering prompt messages

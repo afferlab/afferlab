@@ -1,7 +1,52 @@
 ---
 title: ctx.slots
+description: ctx.slots is the prompt assembly API used by strategies during context build.
 ---
 
 # ctx.slots
 
-Coming soon.
+`ctx.slots` is the current prompt assembly API used by built-in strategies and by the strategy template.
+
+## Available Methods
+
+The worker runtime currently exposes:
+
+- `ctx.slots.add(name, content, options?)`
+- `ctx.slots.render()`
+
+## What `add(...)` Accepts
+
+You can add:
+
+- a string
+- a single `Message`
+- an array of `Message`
+- `null`
+
+The host normalizes these into prompt messages.
+
+## Current Options That Matter
+
+The current implementation actively uses these options:
+
+- `priority`
+- `position`
+- `role`
+- `trimBehavior`
+- `minTokens`
+
+These affect ordering and trimming behavior.
+
+## Render Behavior
+
+`ctx.slots.render()` returns:
+
+```ts
+{ messages: Message[] }
+```
+
+The current implementation sorts slots, applies token-budget trimming, and then returns the final message list.
+
+## Important Note
+
+The slot API types also include `maxRatio` and `minRatio`, but those ratio-based controls are not currently enforced by the live implementation.
