@@ -19,7 +19,7 @@ export default function RecentConversations() {
                 <div className="border-b border-border/60 px-1 pb-1 font-semibold text-tx/85">
                     Recent Conversations
                 </div>
-                <div className="rounded-2xl bg-bg-sidebar-button-hover/30 px-4 py-5 text-sm text-tx/45">
+                <div className="rounded-2xl py-5 text-sm w-full text-center text-tx/45">
                     No recent conversations yet.
                 </div>
             </section>
