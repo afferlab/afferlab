@@ -55,6 +55,11 @@ export interface StrategyContextBuildResult {
     }
 }
 
+export type StrategyContextBuildOutput =
+    | StrategyContextBuildResult
+    | { messages: Message[] }
+    | Message[]
+
 export type ToolCall = {
     id: string
     type: 'function'
@@ -274,7 +279,7 @@ export type StrategyMeta = {
 
 export type StrategyHooks = {
     onInit?: (ctx: LoomaContext) => Promise<void> | void
-    onContextBuild: (ctx: LoomaContext) => Promise<StrategyContextBuildResult> | StrategyContextBuildResult
+    onContextBuild: (ctx: LoomaContext) => Promise<StrategyContextBuildOutput> | StrategyContextBuildOutput
     onTurnEnd?: (ctx: LoomaContext) => Promise<void> | void
     onCleanup?: (ctx: LoomaContext) => Promise<void> | void
     onError?: (ctx: LoomaContext, error: unknown, phase: string) => Promise<void> | void
@@ -287,6 +292,10 @@ export type StrategyModule = {
     configSchema?: unknown
     hooks: StrategyHooks
 }
+
+export type StrategyDefinition =
+    | StrategyModule
+    | (Omit<StrategyModule, 'hooks'> & StrategyHooks)
 
 export type StrategyScope = {
     conversationId: string
@@ -642,7 +651,7 @@ export interface Strategy {
     meta: { id: string; name: string; version?: string }
     allowedTools?: string[]
     allowedPermissions?: import('../tools').ToolPermissions
-    onContextBuild(ctx: LoomaContext): Promise<StrategyContextBuildResult>
+    onContextBuild(ctx: LoomaContext): Promise<StrategyContextBuildOutput>
     onTurnEnd?(ctx: LoomaContext): Promise<void>
     onReplayTurn?(ctx: StrategyReplayTurnInput): Promise<void>
     onToolCall?(ctx: LoomaContext, call: unknown): Promise<string>

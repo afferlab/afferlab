@@ -5,7 +5,10 @@ import type {
     StrategyScope,
     LoomaContext,
     LoomaMessage,
+    Message,
     StrategyModule,
+    StrategyContextBuildOutput,
+    StrategyContextBuildResult,
     StrategyDevEvent,
     StrategyDevEventPhase,
 } from '../../../contracts'
@@ -74,6 +77,45 @@ let lastStatusKey: string | null = null
 type ContextSnapshot = Extract<StrategyDevEvent, { type: 'context' }>['data']
 type DevErrorPhase = Extract<StrategyDevEvent, { type: 'error' }>['phase']
 type DevStatusData = Extract<StrategyDevEvent, { type: 'status' }>['data']
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return Boolean(value && typeof value === 'object')
+}
+
+function normalizeContextBuildResult(result: StrategyContextBuildOutput): StrategyContextBuildResult {
+    if (Array.isArray(result)) {
+        return { prompt: { messages: result as Message[] } }
+    }
+
+    if (isRecord(result)) {
+        const resultRecord = result as Record<string, unknown> & {
+            prompt?: unknown
+            messages?: unknown
+            tools?: unknown
+            meta?: unknown
+        }
+        const prompt = resultRecord.prompt
+        if (isRecord(prompt) && Array.isArray(prompt.messages)) {
+            return result as unknown as StrategyContextBuildResult
+        }
+
+        if (Array.isArray(resultRecord.messages)) {
+            return {
+                prompt: {
+                    messages: resultRecord.messages as Message[],
+                },
+                tools: Array.isArray(resultRecord.tools)
+                    ? (resultRecord.tools as StrategyContextBuildResult['tools'])
+                    : undefined,
+                meta: isRecord(resultRecord.meta)
+                    ? (resultRecord.meta as StrategyContextBuildResult['meta'])
+                    : undefined,
+            }
+        }
+    }
+
+    throw new Error('[strategy-worker] invalid onContextBuild result')
+}
 
 function isWorkerEnvelope(value: unknown): value is WorkerEnvelope {
     return Boolean(
@@ -414,7 +456,8 @@ parentPort.on('message', async (req: StrategyWorkerRequest | WorkerEnvelope) => 
                 })
                 lastCtx = ctx
                 emitDevEvent({ type: 'context', data: snapshotContext(ctx), phase: 'context' })
-                const result = await strategy.hooks.onContextBuild(ctx)
+                const rawResult = await strategy.hooks.onContextBuild(ctx)
+                const result = normalizeContextBuildResult(rawResult)
                 if (result?.prompt?.messages) {
                     const historySelection = (ctx.history as {
                         debugState?: () => {
