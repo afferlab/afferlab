@@ -8,7 +8,6 @@ import type { MemoryHit } from '../memory/memorySearch'
 import type { MemoryIngestOptions, MemoryIngestResult } from '../memory/memoryIngest'
 import type { UIMemoryCloudItem } from '../ui/UIMemoryCloud'
 import type { StrategyManifest } from '../settings'
-import type { MessageContentPart } from '../contentParts'
 
 /**
  * Small DSL that exposes tools for strategy files.
@@ -72,7 +71,6 @@ export type ToolCall = {
 export type Message = {
     role: Role
     content: string | null
-    parts?: MessageContentPart[]
     tool_calls?: ToolCall[]
     tool_call_id?: string
     name?: string
@@ -109,14 +107,19 @@ export type RunResult = {
     error?: { code?: string; message?: string }
 }
 
-export type LoomaAttachment = {
+export type Attachment = {
     id: string
     name: string
     size: number
-    ready: boolean
-    type: 'file' | 'image' | 'audio' | 'video'
+    modality: 'document' | 'image' | 'audio' | 'video'
     mimeType?: string
-    tokens?: number
+}
+
+export type LoomaAttachment = Attachment
+
+export type Input = {
+    text: string
+    attachments: Attachment[]
 }
 
 export type LoomaMessage = {
@@ -161,7 +164,7 @@ export type SlotsAddOptions = {
 }
 
 export type SlotsAPI = {
-    add(name: string, content: string | Message | Message[] | null, options?: SlotsAddOptions): void
+    add(name: string, content: string | Message | Message[] | Input | null, options?: SlotsAddOptions): void
     render(): { messages: Message[] }
 }
 
@@ -226,18 +229,14 @@ export type ToolsAPI = {
         query(options?: MemoryQueryOptions): Promise<UIMemoryCloudItem[]>
         search(query: string, options?: MemorySearchOptions): Promise<MemoryHit[]>
         ingest(input: MemoryIngestInput, options?: MemoryIngestOptions): Promise<MemoryIngestResult | MemoryIngestResult[]>
-        readAsset(assetId: string, maxChars?: number): Promise<string>
+        readAsset(asset: Attachment | string, maxChars?: number): Promise<string>
         retireBySourceMessage(messageId: string): Promise<{ retired: number }>
         retireMemory(memoryId: string): Promise<{ retired: boolean }>
     }
 }
 
 export type LoomaContext = {
-    input: {
-        text: string
-        attachments: LoomaAttachment[]
-        parts?: MessageContentPart[]
-    }
+    input: Input
     history: HistoryHelper
     message: LoomaMessage | null
     config: Record<string, unknown>

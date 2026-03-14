@@ -1,4 +1,4 @@
-import type { MessageContentPart, LoomaAttachment, Message, UIMessage } from '../../../../contracts/index'
+import type { Attachment, MessageContentPart, Message, UIMessage } from '../../../../contracts/index'
 import { WorkerManager, type HostHandlers } from '../../../workers/strategy/WorkerManager'
 import { getDB } from '../../../db'
 import { getMainlineHistory } from '../../../core/history/getMainlineHistory'
@@ -70,19 +70,17 @@ export function buildStrategyHostHandlers(args: {
             `).get(turnId, conversationId) as { content?: string | null; content_parts?: string | null } | undefined
             if (row) {
                 const parts = parseMessageContentParts(row.content_parts, row.content ?? '')
-                const attachments: LoomaAttachment[] = parts
+                const attachments: Attachment[] = parts
                     .filter(isMessageFilePart)
                     .map((part) => ({
                         id: part.assetId,
                         name: part.name,
                         size: part.size,
-                        ready: part.status !== 'uploading' && part.status !== 'error',
-                        type: part.type === 'image' ? 'image' : 'file',
+                        modality: part.type === 'image' ? 'image' : 'document',
                         mimeType: part.mimeType,
                     }))
                 return {
                     text: messageTextFromParts(parts, row.content ?? ''),
-                    parts,
                     attachments,
                 }
             }

@@ -1,4 +1,5 @@
 import type {
+    Attachment,
     LLMModelConfig,
     LoomaContext,
     Message,
@@ -19,6 +20,11 @@ function createUnsupportedInputError(message: string): Error & { errorCode?: str
     const err = new Error(message) as Error & { errorCode?: string }
     err.errorCode = 'MEMORY_INPUT_UNSUPPORTED'
     return err
+}
+
+function resolveAssetId(asset: string | Attachment): string {
+    if (typeof asset === 'string') return asset
+    return asset.id
 }
 
 function getIngestKind(input: MemoryIngestInput): string {
@@ -358,7 +364,8 @@ export function createToolsApi(args: {
                 emitMemory({ action: 'ingest', input: debugInput, output })
                 return output
             },
-            readAsset: async (assetId: string, maxChars?: number) => {
+            readAsset: async (asset: string | Attachment, maxChars?: number) => {
+                const assetId = resolveAssetId(asset)
                 console.debug('[MEMORY][strategy_tool]', 'readAsset', {
                     conversationId,
                     strategyId: strategyId ?? null,

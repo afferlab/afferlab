@@ -94,7 +94,6 @@ export async function buildContext(input: BuildContextInput): Promise<LoomaConte
         input: {
             text: inputText,
             attachments,
-            parts: inputPayload.parts,
         },
         history: historyHelper,
         message: input.message ?? null,

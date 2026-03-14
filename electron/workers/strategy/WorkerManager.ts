@@ -81,7 +81,7 @@ type WorkerHandle = {
 
 export type HostHandlers = {
     getHistory: (args: { conversationId: string; turnId?: string }) => Promise<UIMessage[]>
-    getTurnUserInput?: (args: { conversationId: string; turnId: string }) => Promise<{ text: string; parts?: unknown[]; attachments?: unknown[] }>
+    getTurnUserInput?: (args: { conversationId: string; turnId: string }) => Promise<{ text: string; attachments?: unknown[] }>
     measureTokens?: (args: { text: string }) => Promise<number>
     executeTool?: (args: { call: { id: string; name: string; args?: unknown }; conversationId: string; turnId: string }) => Promise<string>
     executeMemorySearch?: (args: MemoryChunkSearchRequest & { conversationId: string }) => Promise<MemoryHit[]>

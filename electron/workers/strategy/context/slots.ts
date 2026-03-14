@@ -1,17 +1,21 @@
-import type { LoomaContext, Message, SlotsAddOptions } from '../../../../contracts'
+import type { Attachment, Input as StrategyInput, LoomaContext, Message, MessageContentPart, SlotsAddOptions } from '../../../../contracts'
 import { messageTextFromParts, parseMessageContentParts } from '../../../../shared/chat/contentParts'
 import { estimateTokens, estimateTokensForMessages } from '../../../core/tokens/tokenizer'
 
+type SlotMessage = Message & {
+    parts?: MessageContentPart[]
+}
+
 type SlotEntry = {
     name: string
-    messages: Message[]
+    messages: SlotMessage[]
     options?: SlotsAddOptions
     index: number
 }
 
 type SlotsDebugEntry = {
     name: string
-    messages: Message[]
+    messages: SlotMessage[]
     options?: SlotsAddOptions
 }
 
@@ -25,36 +29,75 @@ type WorkingSlot = SlotEntry & {
     tokenCount: number
 }
 
-function normalizeMessages(messages: Message[], role?: Message['role']): Message[] {
+function normalizeMessages(messages: SlotMessage[], role?: Message['role']): SlotMessage[] {
     return messages.map((msg) => {
         if (!role) return msg
         return { ...msg, role }
     })
 }
 
-function normalizeSlotContent(name: string, content: string | Message | Message[] | null, role?: Message['role']): Message[] {
+function toAttachmentPart(attachment: Attachment): MessageContentPart {
+    return {
+        type: attachment.modality === 'image' ? 'image' : 'file',
+        assetId: attachment.id,
+        name: attachment.name,
+        mimeType: attachment.mimeType ?? 'application/octet-stream',
+        size: attachment.size,
+    }
+}
+
+function isStrategyInput(value: unknown): value is StrategyInput {
+    return Boolean(
+        value
+        && typeof value === 'object'
+        && typeof (value as { text?: unknown }).text === 'string'
+        && Array.isArray((value as { attachments?: unknown }).attachments)
+    )
+}
+
+function toInputMessage(name: string, input: StrategyInput, role?: Message['role']): SlotMessage {
+    const resolvedRole = role ?? (name === 'system' ? 'system' : 'user')
+    const parts: MessageContentPart[] = []
+    if (input.text) {
+        parts.push({ type: 'text', text: input.text })
+    }
+    for (const attachment of input.attachments) {
+        parts.push(toAttachmentPart(attachment))
+    }
+
+    return {
+        role: resolvedRole,
+        content: input.text,
+        ...(parts.length > 0 ? { parts } : {}),
+    }
+}
+
+function normalizeSlotContent(name: string, content: string | StrategyInput | Message | Message[] | null, role?: Message['role']): SlotMessage[] {
     if (content == null) return []
+    if (isStrategyInput(content)) {
+        return [toInputMessage(name, content, role)]
+    }
     if (typeof content === 'string') {
         const resolvedRole = role ?? (name === 'system' ? 'system' : 'user')
         return [{ role: resolvedRole, content }]
     }
-    const list = Array.isArray(content) ? content : [content]
+    const list = (Array.isArray(content) ? content : [content]) as SlotMessage[]
     return normalizeMessages(list, role)
 }
 
-function cloneMessages(messages: Message[]): Message[] {
+function cloneMessages(messages: SlotMessage[]): SlotMessage[] {
     return messages.map((message) => ({
         ...message,
         parts: Array.isArray(message.parts) ? parseMessageContentParts(message.parts, message.content ?? '') : message.parts,
     }))
 }
 
-function extractParts(message: Message) {
+function extractParts(message: SlotMessage) {
     const parts = parseMessageContentParts(message.parts, message.content ?? '')
     return parts
 }
 
-function hasAttachments(message: Message): boolean {
+function hasAttachments(message: SlotMessage): boolean {
     return extractParts(message).some((part) => part.type === 'file' || part.type === 'image')
 }
 
@@ -132,7 +175,7 @@ function trimTextToTokenTarget(text: string, targetTokens: number): string {
     return best
 }
 
-function updateMessageFromParts(message: Message, parts: ReturnType<typeof parseMessageContentParts>): Message {
+function updateMessageFromParts(message: SlotMessage, parts: ReturnType<typeof parseMessageContentParts>): SlotMessage {
     return {
         ...message,
         content: messageTextFromParts(parts, message.content),
@@ -140,7 +183,7 @@ function updateMessageFromParts(message: Message, parts: ReturnType<typeof parse
     }
 }
 
-function trimMessageAttachments(message: Message): Message | null {
+function trimMessageAttachments(message: SlotMessage): SlotMessage | null {
     const parts = extractParts(message)
     if (!parts.some((part) => part.type === 'file' || part.type === 'image')) return message
     const textOnly = parts.filter((part) => part.type === 'text')
@@ -148,7 +191,7 @@ function trimMessageAttachments(message: Message): Message | null {
     return updateMessageFromParts(message, textOnly)
 }
 
-function trimMessageText(message: Message, targetTokens: number): Message {
+function trimMessageText(message: SlotMessage, targetTokens: number): SlotMessage {
     const parts = extractParts(message)
     const textParts = parts.filter((part) => part.type === 'text')
     const text = textParts.length > 0

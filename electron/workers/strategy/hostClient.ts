@@ -1,5 +1,6 @@
 import { parentPort } from 'node:worker_threads'
 import type {
+    Attachment,
     LLMModelConfig,
     MemoryChunkSearchRequest,
     MemoryHit,
@@ -12,8 +13,6 @@ import type {
     ToolDefinition,
     MemoryQueryOptions,
     UIMemoryCloudItem,
-    MessageContentPart,
-    LoomaAttachment,
 } from '../../../contracts'
 
 type HostRequestType =
@@ -83,10 +82,10 @@ class HostClient {
         return Array.isArray(result) ? result : []
     }
 
-    async getTurnUserInput(args: { conversationId: string; turnId: string }): Promise<{ text: string; parts?: MessageContentPart[]; attachments?: LoomaAttachment[] }> {
+    async getTurnUserInput(args: { conversationId: string; turnId: string }): Promise<{ text: string; attachments?: Attachment[] }> {
         const result = await this.request('getTurnUserInput', args)
         if (result && typeof result === 'object' && 'text' in result) {
-            return result as { text: string; parts?: MessageContentPart[]; attachments?: LoomaAttachment[] }
+            return result as { text: string; attachments?: Attachment[] }
         }
         return { text: '' }
     }

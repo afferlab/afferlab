@@ -341,7 +341,7 @@ function summarizeMemory(memoryEvents: NormalizedEvent[]): { count: number; labe
 }
 
 function describeAttachment(attachment: LoomaAttachment): RowField {
-    const details = [`${attachment.type}`, formatBytes(attachment.size)].filter(Boolean).join(" / ")
+    const details = [`${attachment.modality}`, formatBytes(attachment.size)].filter(Boolean).join(" / ")
     return { label: attachment.name || "attachment", value: details || "-" }
 }
 

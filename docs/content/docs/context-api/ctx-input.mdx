@@ -1,42 +1,63 @@
 ---
 title: ctx.input
-description: ctx.input exposes the current user turn input that the host resolved from the database.
+description: ctx.input contains the current turn input that the host fetched for the strategy worker.
 ---
 
-# ctx.input
-
-`ctx.input` contains the current turn input that the host fetched for the strategy worker.
+#
 
 ## Shape
 
-Today, `ctx.input` contains:
+```ts
+interface Input {
+  text: string
+  attachments: Attachment[]
+}
 
-- `text`
-- `attachments`
-- `parts`
+interface Attachment {
+  id: string
+  name: string
+  size: number
+  modality: 'document' | 'image' | 'audio' | 'video'
+  mimeType?: string
+}
+```
+## Fields
 
-`text` is the current user message text.
+### text
 
-`attachments` is the normalized list of turn attachments.
+The textual content of the user message.
+If the user sends attachments without text, this will be an empty string.
 
-`parts` is the parsed message-part payload when content parts are available.
+### attachments
 
-## Attachments
+A normalized list of uploaded assets associated with the current user turn.
 
-Each attachment currently includes fields such as:
+### Attachment Fields
 
-- `id`
-- `name`
-- `size`
-- `ready`
-- `type`
-- `mimeType`
-- `tokens`
+- id – asset identifier used to reference the attachment in Looma APIs
+- name – original file name
+- size – file size in bytes
+- modality – the attachment modality (document, image, audio, video)
+- mimeType – MIME type
 
-This is the current worker-facing shape, not just a blueprint type.
+## Usage
+
+Strategies can pass the full user input directly into the prompt:
+```ts
+ctx.slots.add('input', ctx.input)
+```
+This forwards both the message text and its attachments.
+
+Strategies may also access specific fields when needed:
+```ts
+const text = ctx.input.text
+const files = ctx.input.attachments
+```
 
 ## Notes
 
-`ctx.input` is read-only from the strategy point of view.
+ctx.input is read-only from the strategy point of view.
+If a strategy wants to ingest new material into memory, that happens through ctx.tools.memory.ingest(...), not by mutating ctx.input.
 
-If a strategy wants to ingest new material into memory, that happens through `ctx.tools.memory.ingest(...)`, not by mutating `ctx.input`.
+#
+#
