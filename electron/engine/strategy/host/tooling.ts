@@ -1,8 +1,8 @@
 import type { Database } from 'better-sqlite3'
-import type { Message, ToolCall, ToolChoice, ToolDef, ToolDefinition, UIMessage, RunResult } from '../../../../contracts/index'
+import type { Attachment, LLMMessage, MessageContentPart, RuntimeMessage, ToolCall, ToolChoice, ToolDef, ToolDefinition, UIMessage, RunResult } from '../../../../contracts/index'
 import { createToolRegistry } from '../../../core/tools'
 import type { LLMStreamResult } from '../../llm/llmRunner'
-import { messageTextFromParts, parseMessageContentParts } from '../../../../shared/chat/contentParts'
+import { parseMessageContentParts } from '../../../../shared/chat/contentParts'
 
 export function normalizeArgs(args: unknown): Record<string, unknown> {
     if (!args) return {}
@@ -38,11 +38,40 @@ export function normalizeToolCalls(calls: unknown): Array<{ id: string; name: st
     return out
 }
 
-export function toUiMessages(conversationId: string, messages: Message[]): UIMessage[] {
+function attachmentHintText(attachment: Attachment): string {
+    return `File: ${attachment.name}`
+}
+
+function toAttachmentPart(attachment: Attachment): MessageContentPart {
+    return {
+        type: attachment.modality === 'image' ? 'image' : 'file',
+        assetId: attachment.id,
+        name: attachment.name,
+        mimeType: attachment.mimeType ?? 'application/octet-stream',
+        size: attachment.size,
+    }
+}
+
+function buildPartsFromAttachments(message: RuntimeMessage): MessageContentPart[] {
+    const attachments = Array.isArray(message.attachments) ? message.attachments : []
+    if (attachments.length === 0) return []
+    const parts: MessageContentPart[] = []
+    if (typeof message.content === 'string' && message.content.trim().length > 0) {
+        parts.push({ type: 'text', text: message.content })
+    }
+    for (const attachment of attachments) {
+        parts.push({ type: 'text', text: attachmentHintText(attachment) })
+        parts.push(toAttachmentPart(attachment))
+    }
+    return parts
+}
+
+export function toUiMessages(conversationId: string, messages: RuntimeMessage[]): UIMessage[] {
     return messages.map((msg, idx) => {
         const toolCalls = normalizeToolCalls((msg as { tool_calls?: unknown }).tool_calls)
         const content = msg.content ?? ''
-        const parts = parseMessageContentParts((msg as Message & { contentParts?: unknown }).contentParts, content)
+        const parsedParts = parseMessageContentParts((msg as RuntimeMessage & { contentParts?: unknown }).contentParts, content)
+        const parts = parsedParts.length > 0 ? parsedParts : buildPartsFromAttachments(msg)
         return {
             id: msg.id ?? `ctx_${idx + 1}`,
             conversation_id: msg.conversation_id ?? conversationId,
@@ -50,7 +79,7 @@ export function toUiMessages(conversationId: string, messages: Message[]): UIMes
             type: 'text',
             model: msg.model ?? null,
             parent_id: msg.parent_id,
-            content: messageTextFromParts(parts, content),
+            content,
             ...(parts.length > 0 ? { contentParts: parts } : {}),
             timestamp: msg.timestamp ?? Date.now(),
             ...(toolCalls.length ? { tool_calls: toolCalls } : {}),
@@ -93,11 +122,11 @@ export function toBlueprintToolCall(call: { id: string; name: string; args?: unk
 }
 
 export function buildRunResult(
-    inputMessages: Message[],
+    inputMessages: LLMMessage[],
     streamResult: LLMStreamResult,
     toolResults: Map<string, { name: string; args: Record<string, unknown>; status: 'ok' | 'error' | 'aborted'; resultText?: string; errorMessage?: string }>,
 ): RunResult {
-    const messages: Message[] = [...inputMessages]
+    const messages: LLMMessage[] = [...inputMessages]
     const toolCallHistory = streamResult.toolCallHistory ?? []
     for (const round of toolCallHistory) {
         const toolCalls = round.map(call => toBlueprintToolCall(call))

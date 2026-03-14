@@ -68,9 +68,39 @@ export type ToolCall = {
     }
 }
 
+export type StrategyMessageRole = Extract<Role, 'user' | 'assistant' | 'system'>
+
+export type Attachment = {
+    id: string
+    name: string
+    size: number
+    modality: 'document' | 'image' | 'audio' | 'video'
+    mimeType?: string
+}
+
+export type LoomaAttachment = Attachment
+
 export type Message = {
-    role: Role
+    role: StrategyMessageRole
     content: string | null
+    attachments?: Attachment[]
+}
+
+export type LLMMessage = Message | {
+    role: 'assistant'
+    content: string | null
+    attachments?: Attachment[]
+    tool_calls?: ToolCall[]
+    name?: string
+} | {
+    role: 'tool'
+    content: string | null
+    tool_call_id?: string
+    name?: string
+}
+
+export type RuntimeMessage = LLMMessage & {
+    attachments?: Attachment[]
     tool_calls?: ToolCall[]
     tool_call_id?: string
     name?: string
@@ -94,7 +124,7 @@ export type ToolDefinition = {
 export type RunResult = {
     content: string
     finishReason: 'stop' | 'length' | 'tool_calls' | 'error' | 'aborted'
-    messages: Message[]
+    messages: LLMMessage[]
     toolCalls?: Array<{
         id: string
         name: string
@@ -106,16 +136,6 @@ export type RunResult = {
     usage?: { inputTokens?: number; outputTokens?: number; totalTokens?: number }
     error?: { code?: string; message?: string }
 }
-
-export type Attachment = {
-    id: string
-    name: string
-    size: number
-    modality: 'document' | 'image' | 'audio' | 'video'
-    mimeType?: string
-}
-
-export type LoomaAttachment = Attachment
 
 export type Input = {
     text: string
@@ -140,7 +160,7 @@ export type HistoryHelper = {
     range(args: { fromEnd: number; toEnd: number }): Message[]
     recent(n: number): Message[]
     byTokens(maxTokens: number): Message[]
-    asPlainText(msg: Message): string
+    recentText(n: number): string
     debugState?(): HistorySelectionDebug | null
 }
 
@@ -159,7 +179,7 @@ export type SlotsAddOptions = {
     minRatio?: number
     minTokens?: number
     position?: number
-    role?: Role
+    role?: StrategyMessageRole
     trimBehavior?: 'char' | 'message'
 }
 
@@ -204,15 +224,15 @@ export type MemoryIngestInput = MemoryIngestSource | MemoryIngestSource[]
 export type ToolsAPI = {
     llm: {
         call(
-            messages: Message[],
+            messages: LLMMessage[],
             options?: {
                 tools?: ToolDefinition[]
                 toolChoice?: ToolChoice
                 temperature?: number
             }
-        ): Promise<Message>
+        ): Promise<LLMMessage>
         run(options: {
-            messages: Message[]
+            messages: LLMMessage[]
             tools?: ToolDefinition[]
             toolChoice?: ToolChoice
             maxRounds?: number

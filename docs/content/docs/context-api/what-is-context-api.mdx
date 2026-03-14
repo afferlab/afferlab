@@ -3,26 +3,47 @@ title: What is Context API
 description: The Context API is the strategy-facing runtime object exposed inside strategy workers.
 ---
 
-# What is Context API
+#
+
+## Overview
 
 In Looma, strategies run inside isolated worker threads.
 
 Inside that worker, the platform provides a single runtime object called `ctx`.
 
-`ctx` is the strategy-facing API for reading turn data, building prompts, accessing memory tools, and talking back to the host.
+`ctx` is the strategy-facing API used to:
+
+- read the current turn input
+- access conversation history
+- construct prompts
+- interact with memory or tools
+- communicate results back to the host
+
+Strategies never interact directly with the host runtime.
+All interaction happens through `ctx`.
+
+---
 
 ## Why `ctx` Exists
 
-Strategy code does not directly access:
+Strategy code does **not** directly access:
 
 - the SQLite database
 - model provider clients
 - Electron APIs
 - renderer state
 
-Instead, the worker receives a safe host-mediated interface.
+Instead, the host exposes a safe runtime interface inside the worker.
 
 That interface is `ctx`.
+
+This keeps strategies:
+
+- deterministic
+- sandboxed
+- provider-agnostic
+
+---
 
 ## What `ctx` Includes
 
@@ -30,7 +51,6 @@ The current runtime context includes:
 
 - `ctx.input`
 - `ctx.history`
-- `ctx.message`
 - `ctx.config`
 - `ctx.budget`
 - `ctx.capabilities`
@@ -39,38 +59,75 @@ The current runtime context includes:
 - `ctx.tools`
 - `ctx.utils`
 
-Each of these sections is documented on its own page in this section.
+Each section is documented in its own page.
+
+---
 
 ## Typical Usage
 
-In the current codebase, the normal pattern is:
-
-1. read `ctx.input` and `ctx.history`
-2. add prompt pieces through `ctx.slots.add(...)`
-3. return `ctx.slots.render()`
-
-For example:
+Example:
 
 ```ts
-export async function onContextBuild(ctx) {
-  const text = ctx.input.text.trim()
-  const history = ctx.history.recent(8)
+export default defineStrategy({
+  onContextBuild(ctx) {
+    const history = ctx.history.recent(10)
 
-  ctx.slots.add('system', { role: 'system', content: 'You are a helpful assistant.' })
-  if (history.length) ctx.slots.add('history', history, { trimBehavior: 'message' })
-  ctx.slots.add('input', { role: 'user', content: text || '(Empty input)' })
+    ctx.slots.add(
+      'system',
+      { role: 'system', content: 'You are a helpful assistant.' },
+      { priority: 3, position: 0 }
+    )
 
-  return {
-    prompt: ctx.slots.render(),
-    tools: [],
+    if (history.length) {
+      ctx.slots.add(
+        'history',
+        history,
+        { priority: 1, position: 1, trimBehavior: 'message' }
+      )
+    }
+
+    ctx.slots.add(
+      'input',
+      ctx.input,
+      { priority: 2, position: 2 }
+    )
+
+    return ctx.slots.render()
   }
-}
+})
 ```
+
+In this pattern:
+
+- `ctx.history` provides previous messages
+- `ctx.input` represents the current user turn
+- `ctx.slots` builds the prompt structure
+- `ctx.slots.render()` returns the final prompt
+
+---
 
 ## What `ctx` Does Not Do
 
-`ctx` is not a direct database handle or provider SDK wrapper.
+`ctx` is **not** a direct database handle or provider SDK wrapper.
 
-For example, there is currently no `ctx.model.complete(...)` API.
+Strategies should never:
 
-Model calls go through `ctx.tools.llm.call(...)` or `ctx.tools.llm.run(...)`.
+- query the database directly
+- upload files manually
+- call model provider APIs
+
+These responsibilities are handled by the Looma host runtime.
+
+Strategies only describe **how the prompt should be constructed** and **how tools should be used**.
+
+The host is responsible for:
+
+- executing model requests
+- handling provider file APIs
+- managing memory and assets
+- enforcing token budgets
+
+This separation keeps strategies portable and provider-agnostic.
+
+#
+#

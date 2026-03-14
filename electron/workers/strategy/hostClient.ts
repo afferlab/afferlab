@@ -2,12 +2,12 @@ import { parentPort } from 'node:worker_threads'
 import type {
     Attachment,
     LLMModelConfig,
+    LLMMessage,
     MemoryChunkSearchRequest,
     MemoryHit,
     MemoryIngestRequest,
     MemoryIngestResult,
     MemoryAssetRecord,
-    Message,
     RunResult,
     ToolChoice,
     ToolDefinition,
@@ -87,7 +87,7 @@ class HostClient {
         if (result && typeof result === 'object' && 'text' in result) {
             return result as { text: string; attachments?: Attachment[] }
         }
-        return { text: '' }
+        return { text: '', attachments: [] }
     }
 
     async measureTokens(args: { text: string }): Promise<number> {
@@ -174,14 +174,14 @@ class HostClient {
         conversationId: string
         turnId?: string
         model: LLMModelConfig
-        messages: Message[]
+        messages: LLMMessage[]
         tools?: ToolDefinition[]
         toolChoice?: ToolChoice
         temperature?: number
-    }): Promise<Message> {
+    }): Promise<LLMMessage> {
         const result = await this.request('llmCall', args, { timeoutMs: 60000 })
         if (result && typeof result === 'object' && 'role' in result) {
-            return result as Message
+            return result as LLMMessage
         }
         return { role: 'assistant', content: '' }
     }
@@ -190,7 +190,7 @@ class HostClient {
         conversationId: string
         turnId?: string
         model: LLMModelConfig
-        messages: Message[]
+        messages: LLMMessage[]
         tools?: ToolDefinition[]
         toolChoice?: ToolChoice
         maxRounds?: number

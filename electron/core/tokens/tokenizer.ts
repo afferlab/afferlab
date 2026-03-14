@@ -13,6 +13,7 @@ type TokenizableMessage = {
     content?: string | null
     parts?: unknown
     contentParts?: unknown
+    attachments?: Array<{ name?: string }>
 }
 
 const DEFAULT_NON_TEXT_ATTACHMENT_TOKENS = Number(process.env.ATTACHMENT_NON_TEXT_TOKEN_BUDGET ?? 1200)
@@ -62,10 +63,16 @@ export function estimateTokens(text: string): number {
 export function messagePlainTextWithAttachmentPlaceholders(message: TokenizableMessage): string {
     const fallback = typeof message.content === 'string' ? message.content : ''
     const parts = normalizeParts(message)
-    if (parts.length === 0) return fallback
+    if (parts.length === 0) {
+        const attachments = Array.isArray(message.attachments) ? message.attachments : []
+        if (attachments.length === 0) return fallback
+        const lines = [fallback, ...attachments.map((attachment) => `File: ${attachment.name ?? 'attachment'}`)]
+            .filter((line) => typeof line === 'string' && line.trim().length > 0)
+        return lines.join('\n')
+    }
     return parts.map((part) => {
         if (part.type === 'text') return part.text
-        return `[Attachment: ${part.name}, ${part.mimeType}, ${part.size} bytes]`
+        return `File: ${part.name}`
     }).join('\n')
 }
 

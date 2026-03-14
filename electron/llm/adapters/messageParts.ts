@@ -1,4 +1,4 @@
-import type { MessageContentPart, TurnAttachment, UIMessage } from '../../../contracts/index'
+import type { Attachment, MessageContentPart, TurnAttachment, UIMessage } from '../../../contracts/index'
 import { messageTextFromParts, parseMessageContentParts } from '../../../shared/chat/contentParts'
 
 export function toLegacyAttachmentPart(attachment: TurnAttachment): MessageContentPart {
@@ -17,9 +17,24 @@ export function toLegacyAttachmentPart(attachment: TurnAttachment): MessageConte
     }
 }
 
+function toStrategyAttachmentPart(attachment: Attachment): MessageContentPart {
+    const mimeType = attachment.mimeType || 'application/octet-stream'
+    return {
+        type: attachment.modality === 'image' ? 'image' : 'file',
+        assetId: attachment.id,
+        name: attachment.name || attachment.id,
+        mimeType,
+        size: attachment.size ?? 0,
+    }
+}
+
+function attachmentHintText(attachment: { name?: string }): string {
+    return `File: ${attachment.name || 'attachment'}`
+}
+
 export function normalizeMessage(message: UIMessage): UIMessage {
     const base = typeof message.content === 'string' ? message.content : ''
-    const withLegacy = message as UIMessage & { contentParts?: unknown; parts?: unknown }
+    const withLegacy = message as UIMessage & { contentParts?: unknown; parts?: unknown; attachments?: Attachment[] }
     if (withLegacy.contentParts != null) {
         const normalized = parseMessageContentParts(withLegacy.contentParts, base)
         return normalized.length > 0
@@ -31,6 +46,21 @@ export function normalizeMessage(message: UIMessage): UIMessage {
         return normalized.length > 0
             ? { ...message, contentParts: normalized }
             : message
+    }
+    if (Array.isArray(withLegacy.attachments) && withLegacy.attachments.length > 0) {
+        const normalized: MessageContentPart[] = []
+        if (base.trim().length > 0) {
+            normalized.push({ type: 'text', text: base })
+        }
+        for (const attachment of withLegacy.attachments) {
+            normalized.push({ type: 'text', text: attachmentHintText(attachment) })
+            normalized.push(toStrategyAttachmentPart(attachment))
+        }
+        return {
+            ...message,
+            content: base,
+            contentParts: normalized,
+        }
     }
     return message
 }

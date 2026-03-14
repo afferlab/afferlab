@@ -1,4 +1,4 @@
-import type { Attachment, MessageContentPart, Message, UIMessage } from '../../../../contracts/index'
+import type { Attachment, LLMMessage, MessageContentPart, UIMessage } from '../../../../contracts/index'
 import { WorkerManager, type HostHandlers } from '../../../workers/strategy/WorkerManager'
 import { getDB } from '../../../db'
 import { getMainlineHistory } from '../../../core/history/getMainlineHistory'
@@ -24,6 +24,14 @@ export function excludeMessageById(messages: UIMessage[], messageId?: string | n
 
 function isMessageFilePart(part: MessageContentPart): part is Extract<MessageContentPart, { type: 'file' | 'image' }> {
     return part.type === 'file' || part.type === 'image'
+}
+
+function toAttachmentModality(part: Extract<MessageContentPart, { type: 'file' | 'image' }>): Attachment['modality'] {
+    if (part.type === 'image') return 'image'
+    const mime = (part.mimeType || '').toLowerCase()
+    if (mime.startsWith('audio/')) return 'audio'
+    if (mime.startsWith('video/')) return 'video'
+    return 'document'
 }
 
 export function buildStrategyHostHandlers(args: {
@@ -76,7 +84,7 @@ export function buildStrategyHostHandlers(args: {
                         id: part.assetId,
                         name: part.name,
                         size: part.size,
-                        modality: part.type === 'image' ? 'image' : 'document',
+                        modality: toAttachmentModality(part),
                         mimeType: part.mimeType,
                     }))
                 return {
@@ -86,7 +94,7 @@ export function buildStrategyHostHandlers(args: {
             }
             const history = getMainlineHistory(db, { conversationId }) as UIMessage[]
             const lastUser = [...history].reverse().find((message) => message.role === 'user')
-            return { text: typeof lastUser?.content === 'string' ? lastUser.content : '' }
+            return { text: typeof lastUser?.content === 'string' ? lastUser.content : '', attachments: [] }
         },
         measureTokens: async ({ text }) => {
             const content = typeof text === 'string' ? text : ''
@@ -144,7 +152,7 @@ export function buildStrategyHostHandlers(args: {
             })
             const mappedTools = await resolveToolDefs(getDB(), conversationId, tools, toolChoice)
             const content = await callLLMUniversalNonStream(resolved, toUiMessages(conversationId, messages), mappedTools)
-            return { role: 'assistant', content: content ?? '' } as Message
+            return { role: 'assistant', content: content ?? '' } as LLMMessage
         },
         runLLMLoop: async ({ conversationId, turnId, model, messages, tools, toolChoice, maxRounds, temperature }) => {
             const mappedTools = await resolveToolDefs(getDB(), conversationId, tools, toolChoice)

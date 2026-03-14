@@ -9,7 +9,8 @@ import type {
     MemoryIngestResult,
     MemoryAssetRecord,
     LLMModelConfig,
-    Message,
+    Attachment,
+    LLMMessage,
     ToolChoice,
     ToolDefinition,
     RunResult,
@@ -48,8 +49,8 @@ type HostRequest =
     | { kind: 'hostRequest'; id: string; method: 'stateGet'; payload: { conversationId: string; strategyId: string; key: string } }
     | { kind: 'hostRequest'; id: string; method: 'stateSet'; payload: { conversationId: string; strategyId: string; key: string; value: unknown } }
     | { kind: 'hostRequest'; id: string; method: 'stateDelete'; payload: { conversationId: string; strategyId: string; key: string } }
-    | { kind: 'hostRequest'; id: string; method: 'llmCall'; payload: { conversationId: string; turnId?: string; model: LLMModelConfig; messages: Message[]; tools?: ToolDefinition[]; toolChoice?: ToolChoice; temperature?: number } }
-    | { kind: 'hostRequest'; id: string; method: 'runLLMLoop'; payload: { conversationId: string; turnId?: string; model: LLMModelConfig; messages: Message[]; tools?: ToolDefinition[]; toolChoice?: ToolChoice; maxRounds?: number; temperature?: number } }
+    | { kind: 'hostRequest'; id: string; method: 'llmCall'; payload: { conversationId: string; turnId?: string; model: LLMModelConfig; messages: LLMMessage[]; tools?: ToolDefinition[]; toolChoice?: ToolChoice; temperature?: number } }
+    | { kind: 'hostRequest'; id: string; method: 'runLLMLoop'; payload: { conversationId: string; turnId?: string; model: LLMModelConfig; messages: LLMMessage[]; tools?: ToolDefinition[]; toolChoice?: ToolChoice; maxRounds?: number; temperature?: number } }
 
 type HostResponse =
     | { kind: 'hostResponse'; id: string; ok: true; result?: unknown }
@@ -81,7 +82,7 @@ type WorkerHandle = {
 
 export type HostHandlers = {
     getHistory: (args: { conversationId: string; turnId?: string }) => Promise<UIMessage[]>
-    getTurnUserInput?: (args: { conversationId: string; turnId: string }) => Promise<{ text: string; attachments?: unknown[] }>
+    getTurnUserInput?: (args: { conversationId: string; turnId: string }) => Promise<{ text: string; attachments?: Attachment[] }>
     measureTokens?: (args: { text: string }) => Promise<number>
     executeTool?: (args: { call: { id: string; name: string; args?: unknown }; conversationId: string; turnId: string }) => Promise<string>
     executeMemorySearch?: (args: MemoryChunkSearchRequest & { conversationId: string }) => Promise<MemoryHit[]>
@@ -95,8 +96,8 @@ export type HostHandlers = {
     stateGet?: (args: { conversationId: string; strategyId: string; key: string }) => Promise<unknown>
     stateSet?: (args: { conversationId: string; strategyId: string; key: string; value: unknown }) => Promise<{ ok: true }>
     stateDelete?: (args: { conversationId: string; strategyId: string; key: string }) => Promise<{ ok: true }>
-    llmCall?: (args: { conversationId: string; turnId?: string; model: LLMModelConfig; messages: Message[]; tools?: ToolDefinition[]; toolChoice?: ToolChoice; temperature?: number }) => Promise<Message>
-    runLLMLoop?: (args: { conversationId: string; turnId?: string; model: LLMModelConfig; messages: Message[]; tools?: ToolDefinition[]; toolChoice?: ToolChoice; maxRounds?: number; temperature?: number }) => Promise<RunResult>
+    llmCall?: (args: { conversationId: string; turnId?: string; model: LLMModelConfig; messages: LLMMessage[]; tools?: ToolDefinition[]; toolChoice?: ToolChoice; temperature?: number }) => Promise<LLMMessage>
+    runLLMLoop?: (args: { conversationId: string; turnId?: string; model: LLMModelConfig; messages: LLMMessage[]; tools?: ToolDefinition[]; toolChoice?: ToolChoice; maxRounds?: number; temperature?: number }) => Promise<RunResult>
     onDevEvent?: (event: StrategyDevEvent) => void
 }
 

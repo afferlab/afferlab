@@ -76,8 +76,7 @@ function createMockCtx() {
                 range: () => [],
                 recent: () => [],
                 byTokens: () => [],
-                asPlainText: (msg: { content?: unknown } | null) =>
-                    typeof msg?.content === 'string' ? msg.content : '',
+                recentText: () => '',
             },
             slots: {
                 add: (name: string, content: unknown) => {

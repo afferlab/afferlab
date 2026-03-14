@@ -3,7 +3,9 @@ import type {
     LLMModelConfig,
     LoomaContext,
     LoomaMessage,
-    Message,
+    Attachment,
+    MessageContentPart,
+    RuntimeMessage,
     StrategyDevEvent,
 } from '../../../../contracts'
 import { hostClient } from '../hostClient'
@@ -13,6 +15,18 @@ import { measureTokens } from './utils'
 import { createToolsApi } from './tools'
 import { parseMessageContentParts } from '../../../../shared/chat/contentParts'
 import { estimateTokensForMessages } from '../../../core/tokens/tokenizer'
+
+function toAttachmentModality(args: { type: 'file' | 'image'; mimeType?: string }): Attachment['modality'] {
+    if (args.type === 'image') return 'image'
+    const mime = (args.mimeType || '').toLowerCase()
+    if (mime.startsWith('audio/')) return 'audio'
+    if (mime.startsWith('video/')) return 'video'
+    return 'document'
+}
+
+function isFilePart(part: MessageContentPart): part is Extract<MessageContentPart, { type: 'file' | 'image' }> {
+    return part.type === 'file' || part.type === 'image'
+}
 
 type BuildContextInput = {
     conversationId: string
@@ -35,21 +49,31 @@ export async function buildContext(input: BuildContextInput): Promise<LoomaConte
     const model = input.model
     const config = input.configValues ?? {}
     const historyMessages = conversationId
-        ? ((await hostClient.getHistory({ conversationId, turnId: input.turnId })) as Message[]).map((message) => {
-            const withContentParts = message as Message & { contentParts?: unknown }
+        ? ((await hostClient.getHistory({ conversationId, turnId: input.turnId })) as RuntimeMessage[]).map((message) => {
+            const withContentParts = message as RuntimeMessage & { contentParts?: unknown }
             const parts = parseMessageContentParts(
                 withContentParts.contentParts,
                 typeof message.content === 'string' ? message.content : '',
             )
+            const attachments = parts
+                .filter(isFilePart)
+                .map((part) => ({
+                    id: part.assetId,
+                    name: part.name,
+                    size: part.size,
+                    modality: toAttachmentModality({ type: part.type, mimeType: part.mimeType }),
+                    mimeType: part.mimeType,
+                }))
             return {
                 ...message,
+                attachments,
                 parts,
             }
         })
         : []
     const inputPayload = conversationId && turnId
         ? await hostClient.getTurnUserInput({ conversationId, turnId })
-        : { text: '' }
+        : { text: '', attachments: [] }
     const inputText = inputPayload.text
     const attachments = Array.isArray(inputPayload.attachments)
         ? inputPayload.attachments

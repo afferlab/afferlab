@@ -1,8 +1,8 @@
 import type {
     Attachment,
+    LLMMessage,
     LLMModelConfig,
     LoomaContext,
-    Message,
     ToolChoice,
     ToolDefinition,
     RunResult,
@@ -121,9 +121,9 @@ export function createToolsApi(args: {
     return {
         llm: {
             call: async (
-                messages: Message[],
+                messages: LLMMessage[],
                 options?: { tools?: ToolDefinition[]; toolChoice?: ToolChoice; temperature?: number },
-            ): Promise<Message> => {
+            ): Promise<LLMMessage> => {
                 if (!model) {
                     throw new Error('model missing for llm.call')
                 }
@@ -152,7 +152,7 @@ export function createToolsApi(args: {
                 }
             },
             run: async (options: {
-                messages: Message[]
+                messages: LLMMessage[]
                 tools?: ToolDefinition[]
                 toolChoice?: ToolChoice
                 maxRounds?: number

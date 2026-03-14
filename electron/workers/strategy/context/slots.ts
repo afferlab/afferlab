@@ -46,6 +46,22 @@ function toAttachmentPart(attachment: Attachment): MessageContentPart {
     }
 }
 
+function attachmentHintText(attachment: Attachment): string {
+    return `File: ${attachment.name}`
+}
+
+function buildMessageParts(text: string | null | undefined, attachments: Attachment[] | undefined): MessageContentPart[] {
+    const parts: MessageContentPart[] = []
+    if (typeof text === 'string' && text.trim().length > 0) {
+        parts.push({ type: 'text', text })
+    }
+    for (const attachment of attachments ?? []) {
+        parts.push({ type: 'text', text: attachmentHintText(attachment) })
+        parts.push(toAttachmentPart(attachment))
+    }
+    return parts
+}
+
 function isStrategyInput(value: unknown): value is StrategyInput {
     return Boolean(
         value
@@ -57,18 +73,29 @@ function isStrategyInput(value: unknown): value is StrategyInput {
 
 function toInputMessage(name: string, input: StrategyInput, role?: Message['role']): SlotMessage {
     const resolvedRole = role ?? (name === 'system' ? 'system' : 'user')
-    const parts: MessageContentPart[] = []
-    if (input.text) {
-        parts.push({ type: 'text', text: input.text })
-    }
-    for (const attachment of input.attachments) {
-        parts.push(toAttachmentPart(attachment))
-    }
+    const parts = buildMessageParts(input.text, input.attachments)
 
     return {
         role: resolvedRole,
         content: input.text,
+        ...(input.attachments.length > 0 ? { attachments: input.attachments } : {}),
         ...(parts.length > 0 ? { parts } : {}),
+    }
+}
+
+function normalizeMessage(message: SlotMessage): SlotMessage {
+    if (Array.isArray(message.parts) && message.parts.length > 0) {
+        return {
+            ...message,
+            parts: parseMessageContentParts(message.parts, message.content ?? ''),
+        }
+    }
+    if (!Array.isArray(message.attachments) || message.attachments.length === 0) return message
+    const parts = buildMessageParts(message.content, message.attachments)
+    return {
+        ...message,
+        content: message.content ?? null,
+        parts,
     }
 }
 
@@ -82,7 +109,7 @@ function normalizeSlotContent(name: string, content: string | StrategyInput | Me
         return [{ role: resolvedRole, content }]
     }
     const list = (Array.isArray(content) ? content : [content]) as SlotMessage[]
-    return normalizeMessages(list, role)
+    return normalizeMessages(list, role).map(normalizeMessage)
 }
 
 function cloneMessages(messages: SlotMessage[]): SlotMessage[] {

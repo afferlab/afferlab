@@ -141,7 +141,8 @@ function toOpenAIMessagesWithInlineBase64(
         }
 
         const content: OpenAIChatContentPart[] = []
-        for (const part of messageParts) {
+        for (let i = 0; i < messageParts.length; i += 1) {
+            const part = messageParts[i]
             if (part.type === 'text') {
                 if (!part.text.trim()) continue
                 content.push({ type: 'text', text: part.text.trim() })
@@ -156,6 +157,9 @@ function toOpenAIMessagesWithInlineBase64(
             }
             if (!part.data || part.data.length <= 0) {
                 throw new Error(`AttachmentDataMissing: ${part.assetId ?? part.name ?? 'unknown'}`)
+            }
+            if (!hasExplicitAttachmentHint(messageParts, i, part.name)) {
+                content.push({ type: 'text', text: `File: ${part.name}` })
             }
             const base64 = Buffer.from(part.data).toString('base64')
             content.push({
@@ -395,6 +399,9 @@ function isOpenAIInvalidFileReference(args: {
     const hasFileContext = hay.includes('file') || hay.includes('input_file') || hay.includes('file_id')
     if (!hasFileContext) return false
     if (hay.includes('invalid_file')) return true
+    if (hay.includes('invalid_file_id')) return true
+    if (hay.includes('expired_file')) return true
+    if (hay.includes('file_not_found')) return true
     if (hay.includes('file not found')) return true
     if (hay.includes('no such file')) return true
     if (hay.includes('unknown file')) return true
@@ -472,6 +479,22 @@ function toAttachmentPart(part: Extract<MessageContentPart, { type: 'file' | 'im
     }
 }
 
+function toAttachmentHintPart(
+    role: OpenAIResponsesInputItem['role'],
+    part: Extract<MessageContentPart, { type: 'file' | 'image' }>,
+): OpenAIResponsesInputPart {
+    return toResponsesTextPart(role, `File: ${part.name}`)
+}
+
+function hasExplicitAttachmentHint(
+    parts: MessageContentPart[],
+    index: number,
+    name: string,
+): boolean {
+    const previous = index > 0 ? parts[index - 1] : null
+    return Boolean(previous && previous.type === 'text' && previous.text.trim() === `File: ${name}`)
+}
+
 function resolveResponsesRole(role: string): OpenAIResponsesInputItem['role'] | null {
     if (role === 'system' || role === 'user' || role === 'assistant' || role === 'developer') return role
     return null
@@ -498,11 +521,16 @@ export function buildResponsesInput(
         const role = resolveResponsesRole((msg as { role?: string }).role ?? '')
         if (!role) continue
         const parts: OpenAIResponsesInputPart[] = []
-        for (const part of getMessageParts(msg)) {
+        const messageParts = getMessageParts(msg)
+        for (let i = 0; i < messageParts.length; i += 1) {
+            const part = messageParts[i]
             if (part.type === 'text' && !part.text.trim()) continue
             if (part.type === 'text') {
                 parts.push(toResponsesTextPart(role, part.text))
             } else if (part.type === 'file' || part.type === 'image') {
+                if (!hasExplicitAttachmentHint(messageParts, i, part.name)) {
+                    parts.push(toAttachmentHintPart(role, part))
+                }
                 parts.push(toAttachmentPart(part))
             }
         }

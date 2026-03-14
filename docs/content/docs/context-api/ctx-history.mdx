@@ -1,41 +1,176 @@
 ---
 title: ctx.history
-description: ctx.history provides host-fetched conversation history helpers for prompt building.
+description: ctx.history provides helper methods for selecting conversation history during prompt construction.
 ---
 
-# ctx.history
+#
 
-`ctx.history` is a helper API over the conversation history returned by the host for the current turn.
+## Shape
 
-## Available Methods
+```ts
+interface History {
+  lastUser(): Message | null
+  lastAssistant(): Message | null
+  range(options: { fromEnd: number; toEnd: number }): Message[]
+  recent(n: number): Message[]
+  byTokens(maxTokens: number): Message[]
+  recentText(n: number): string
+}
 
-The current runtime supports:
+interface Message {
+  role: 'user' | 'assistant' | 'system'
+  content: string | null
+  attachments?: Attachment[]
+}
 
-- `lastUser()`
-- `lastAssistant()`
-- `range({ fromEnd, toEnd })`
-- `recent(n)`
-- `byTokens(maxTokens)`
-- `asPlainText(message)`
+interface Attachment {
+  id: string
+  name: string
+  size: number
+  modality: 'document' | 'image' | 'audio' | 'video'
+  mimeType?: string
+}
+```
 
-## Selection Semantics
+## Methods
 
-Selections are based on the host-fetched history array for the turn.
+### lastUser()
 
-- `recent(n)` returns the latest `n` messages
-- `range({ fromEnd, toEnd })` slices from the back of history
-- `byTokens(maxTokens)` walks backward and keeps messages until the token estimate budget is reached
+Returns the most recent **user** message in the conversation history.
 
-The selected messages are returned in old-to-new order.
+If no user message exists, this returns `null`.
 
-## Plain Text Conversion
+---
 
-`asPlainText(message)` returns a text representation suitable for prompting or embedding.
+### lastAssistant()
 
-In the current implementation it preserves text content and uses attachment placeholders when needed.
+Returns the most recent **assistant** message in the conversation history.
 
-## Debug State
+If no assistant message exists, this returns `null`.
 
-Internally, the history helper also tracks selection debug state used by the dev inspector.
+---
 
-That debug helper exists today, but it should be treated as diagnostic data rather than stable strategy API surface.
+### range( fromEnd, toEnd )
+
+Selects a slice of messages relative to the end of the conversation history.
+
+Messages are indexed from the end:
+
+- `0` – most recent message
+- `1` – previous message
+- `2` – two messages back
+
+The selection range is **left-inclusive and right-exclusive**:
+
+```
+[fromEnd, toEnd)
+```
+
+Constraints:
+
+```
+fromEnd > toEnd >= 0
+```
+
+The returned messages are always ordered from **old → new**.
+
+---
+
+### recent(n)
+
+Returns the latest `n` messages from the conversation history.
+
+This is equivalent to:
+
+```ts
+ctx.history.range({ fromEnd: n, toEnd: 0 })
+```
+
+---
+
+### byTokens(maxTokens)
+
+Selects messages from the end of the history until an approximate token budget is reached.
+
+Messages are collected starting from the most recent message and walking backward until the estimated token limit is reached.
+
+Returned messages are always ordered from **old → new**.
+
+Messages that would exceed the token limit are not included.
+
+---
+
+### recentText(n)
+
+Returns a **plain text representation** of the latest `n` messages.
+
+Attachments are converted into readable placeholders:
+
+```
+File: filename.ext
+```
+
+Example output:
+
+```
+User: Check this report
+File: report.pdf
+
+Assistant: The report looks correct.
+```
+
+This helper is useful when building prompts that only accept text.
+
+---
+
+## Usage
+
+Strategies can retrieve recent conversation history when building prompts:
+
+```ts
+const history = ctx.history.recent(10)
+
+ctx.slots.add('history', history)
+```
+
+Strategies may also apply additional filtering:
+
+```ts
+const userMessages = ctx.history
+  .recent(20)
+  .filter(m => m.role === 'user')
+```
+
+Text-only prompts can use:
+
+```ts
+const textHistory = ctx.history.recentText(10)
+```
+
+---
+
+## Attachments in History
+
+Attachments returned in `Message.attachments` are **metadata references**, not file contents.
+
+They represent assets stored in Looma’s asset system.
+
+During prompt rendering:
+
+- attachments are converted into provider file references (for example `file_id`)
+- a small text hint such as `File: report.pdf` may be inserted to preserve filename context
+
+This allows strategies to include multimodal history without manually handling file uploads.
+
+---
+
+## Notes
+
+History selections operate on the conversation snapshot fetched by the host for the current turn.
+
+All history helpers return message arrays that are safe to filter or transform inside strategy code.
+
+Attachments in history are references to stored assets. File transfer and provider file reuse are handled by the host during prompt rendering.
+
+#
+#
