@@ -1,5 +1,6 @@
 import type { LLMModelConfig } from './llm'
 import type { ModelStatus } from './models'
+import type { StrategyConfigSchema } from './strategy'
 import type { ToolPermissions } from './tools'
 import type { WebSearchSettings } from './webSearch'
 
@@ -50,7 +51,8 @@ export type ModelOverrideRecord = {
 export type StrategyManifest = {
     allowlist?: string[]
     permissions?: ToolPermissions
-    paramsSchema?: unknown
+    paramsSchema?: StrategyConfigSchema
+    configSchema?: StrategyConfigSchema
     dev?: {
         sourcePath?: string
         metaVersion?: string

@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import type { StrategyModule } from '../../../contracts'
+import { cloneValidatedConfigSchema } from '../../core/strategy/configSchema'
 
 const HOOK_NAMES = [
     'onContextBuild',
@@ -60,9 +61,12 @@ function normalizeStrategyModule(mod: Record<string, unknown>, entryPath: string
     const defaultExport = isRecord(mod.default) ? mod.default : null
     const meta = (isRecord(mod.meta) ? mod.meta : null)
         ?? (defaultExport && isRecord(defaultExport.meta) ? defaultExport.meta : null)
-    const configSchema =
-        (mod.configSchema as StrategyModule['configSchema'])
-        ?? (defaultExport?.configSchema as StrategyModule['configSchema'])
+    const rawConfigSchema =
+        (mod.configSchema as unknown)
+        ?? (defaultExport?.configSchema as unknown)
+    const configSchema = rawConfigSchema == null
+        ? undefined
+        : cloneValidatedConfigSchema(rawConfigSchema)
 
     const hookSources: Array<Record<string, unknown> | null> = [
         isRecord(mod.hooks) ? (mod.hooks as Record<string, unknown>) : null,

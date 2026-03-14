@@ -19,6 +19,7 @@ import { getStrategyOrFallback } from '../../../core/strategy/strategyRegistry'
 import { switchConversationStrategy } from '../../../core/strategy/switchStrategy'
 import { disposeStrategyWorkers } from '../host/createStrategyHost'
 import { emitStrategyDevEvent } from './devEventBus'
+import { cloneValidatedConfigSchema } from '../../../core/strategy/configSchema'
 
 import type {
     StrategyDevCompileRequest,
@@ -193,8 +194,10 @@ export async function saveStrategyDev(input: StrategyDevSaveRequest): Promise<St
         const description = meta.description
         const version = shortHash
         const now = Date.now()
+        const configSchema = cloneValidatedConfigSchema(input.paramsSchema)
         const manifest: StrategyManifest = {
-            paramsSchema: input.paramsSchema,
+            paramsSchema: configSchema,
+            configSchema,
             dev: {
                 sourcePath: filePath,
                 metaVersion: meta.version,
@@ -281,9 +284,11 @@ export async function reloadStrategyDev(input: StrategyDevReloadRequest): Promis
         const description = meta.description
         const version = shortHash
         const manifest = safeJson<StrategyManifest>(existing.manifest_json ?? '{}', {})
+        const configSchema = cloneValidatedConfigSchema(input.paramsSchema ?? manifest.configSchema ?? manifest.paramsSchema)
         const nextManifest: StrategyManifest = {
             ...manifest,
-            paramsSchema: input.paramsSchema ?? manifest.paramsSchema,
+            paramsSchema: configSchema,
+            configSchema,
             dev: {
                 sourcePath: filePath,
                 metaVersion: meta.version,

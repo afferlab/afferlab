@@ -46,7 +46,8 @@ async function toStrategyInfo(
     const manifest = effective?.manifest ?? safeJson<StrategyManifest>(row.manifest_json ?? '{}', {})
     const capabilities = safeJson<Record<string, unknown>>(row.capabilities_json ?? '{}', {})
     const memoryCloud = await resolveStrategyMemoryCloudFeature(row)
-    const paramsSchema = manifest?.paramsSchema
+    const configSchema = manifest?.configSchema ?? manifest?.paramsSchema
+    const paramsSchema = configSchema
     return {
         id: row.id,
         key: row.key,
@@ -59,7 +60,7 @@ async function toStrategyInfo(
         entry_path: row.entry_path,
         manifest,
         paramsSchema,
-        configSchema: paramsSchema,
+        configSchema,
         capabilities,
         enabled: effective?.enabled ?? row.enabled ?? true,
         features: { memoryCloud },

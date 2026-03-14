@@ -7,6 +7,7 @@ import { getAppSettings, getStrategyPrefs, listStrategyOverrides } from '../sett
 import { DEFAULT_STRATEGY_ID } from './strategyScope'
 import { configSchema as minimalConfigSchema } from '../../strategies/builtin/minimal'
 import { configSchema as memoryFirstConfigSchema } from '../../strategies/builtin/memory-first'
+import { cloneValidatedConfigSchema } from './configSchema'
 
 type BuiltinStrategySeed = {
     id: string
@@ -32,7 +33,10 @@ const BUILTIN_STRATEGIES: BuiltinStrategySeed[] = [
         version: '1',
         capabilities: {},
         default_allowlist: [],
-        manifest: { paramsSchema: minimalConfigSchema },
+        manifest: {
+            paramsSchema: cloneValidatedConfigSchema(minimalConfigSchema),
+            configSchema: cloneValidatedConfigSchema(minimalConfigSchema),
+        },
     },
     {
         id: 'builtin:memory-first',
@@ -44,7 +48,10 @@ const BUILTIN_STRATEGIES: BuiltinStrategySeed[] = [
         version: '1',
         capabilities: { supportsMemoryIngest: true },
         default_allowlist: ['memories.*', 'builtin.web_search', 'builtin.web_fetch', 'mcp.*'],
-        manifest: { paramsSchema: memoryFirstConfigSchema },
+        manifest: {
+            paramsSchema: cloneValidatedConfigSchema(memoryFirstConfigSchema),
+            configSchema: cloneValidatedConfigSchema(memoryFirstConfigSchema),
+        },
     },
 ]
 

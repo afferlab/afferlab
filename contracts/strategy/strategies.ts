@@ -68,6 +68,27 @@ export type ToolCall = {
     }
 }
 
+export type StrategyConfigType = 'text' | 'number' | 'boolean' | 'select'
+
+export type StrategyConfigOption = {
+    label: string
+    value: string
+}
+
+export type StrategyConfigEntry = {
+    key: string
+    type: StrategyConfigType
+    default: string | number | boolean
+    label?: string
+    description?: string
+    min?: number
+    max?: number
+    step?: number
+    options?: StrategyConfigOption[]
+}
+
+export type StrategyConfigSchema = StrategyConfigEntry[]
+
 export type StrategyMessageRole = Extract<Role, 'user' | 'assistant' | 'system'>
 
 export type Attachment = {
@@ -304,7 +325,7 @@ export type StrategyHooks = {
 
 export type StrategyModule = {
     meta: StrategyMeta
-    configSchema?: unknown
+    configSchema?: StrategyConfigSchema
     hooks: StrategyHooks
 }
 

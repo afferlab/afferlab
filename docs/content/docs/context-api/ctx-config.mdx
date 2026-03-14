@@ -3,29 +3,217 @@ title: ctx.config
 description: ctx.config contains runtime-resolved strategy parameter values from strategy settings.
 ---
 
-# ctx.config
+#
 
-`ctx.config` contains the resolved runtime values for the active strategy configuration.
+## Overview
 
-## Where It Comes From
+`ctx.config` contains the resolved runtime configuration values for the active strategy.
 
-These values come from the strategy runtime config built by the host from:
+These values are derived from the strategy's `configSchema` and are provided to the strategy worker as a read-only object.
 
-- the strategy manifest/schema
-- saved strategy parameter overrides
-- current conversation strategy selection
+Each configuration entry becomes a property on `ctx.config`, using the key defined in the schema.
 
-## What It Is For
+For example:
 
-Use `ctx.config` for strategy behavior toggles and numeric/string settings such as:
+```ts
+const depth = ctx.config.historyDepth
+```
 
-- history depth
-- retrieval limits
-- prompt style options
-- feature toggles
+#
 
-## What It Is Not
+## Shape
+
+`ctx.config` is a plain object where each property corresponds to a key defined in the strategy's `configSchema`.
+
+```ts
+interface Config {
+  [key: string]: unknown
+}
+```
+
+At runtime, each key defined in `configSchema` is exposed as:
+
+```ts
+ctx.config.<key>
+```
+
+#
+
+## Supported Config Types
+
+Strategies can define configuration parameters using the following types.
+
+### text
+
+Text input values.
+
+Used for prompts, labels, or free-form text configuration.
+
+Example schema:
+
+```ts
+{
+  key: "systemPrompt",
+  type: "text",
+  default: "You are a helpful assistant."
+}
+```
+
+Runtime value:
+
+```ts
+ctx.config.systemPrompt
+```
+
+#
+
+### number
+
+Numeric configuration values.
+
+Number fields may define upper and lower bounds.
+
+Example schema:
+
+```ts
+{
+  key: "historyDepth",
+  type: "number",
+  default: 10,
+  min: 1,
+  max: 50
+}
+```
+
+Runtime value:
+
+```ts
+ctx.config.historyDepth
+```
+
+Runtime guarantees that the value is clamped within the defined bounds.
+
+#
+
+### boolean
+
+Boolean toggle values.
+
+Example schema:
+
+```ts
+{
+  key: "enableRAGMemory",
+  type: "boolean",
+  default: true
+}
+```
+
+Runtime value:
+
+```ts
+ctx.config.enableRAGMemory
+```
+
+#
+
+### select
+
+Single-choice values selected from predefined options.
+
+Example schema:
+
+```ts
+{
+  key: "promptStyle",
+  type: "select",
+  default: "simple",
+  options: ["simple", "cot", "structured"]
+}
+```
+
+Runtime value:
+
+```ts
+ctx.config.promptStyle
+```
+
+If an invalid value is encountered, the default value is used.
+
+#
+
+## Where Values Come From
+
+Configuration values are resolved by the host using:
+
+- the strategy's `configSchema`
+- saved user configuration overrides
+- the currently selected strategy in the conversation
+
+If no override exists, the schema `default` value is used.
+
+#
+
+## Runtime Guarantees
+
+The host ensures that all configuration values are safe to use.
+
+At runtime:
+
+- all keys defined in `configSchema` are present on `ctx.config`
+- default values are always applied
+- numeric values are clamped to `min` / `max`
+- invalid select values fall back to `default`
+
+Strategies therefore do not need to perform additional validation.
+
+#
+
+## Usage
+
+Strategies typically read configuration values when building prompts.
+
+Example:
+
+```ts
+export default defineStrategy({
+  configSchema: [
+    {
+      key: "historyDepth",
+      type: "number",
+      default: 10,
+      min: 1,
+      max: 20
+    }
+  ],
+
+  onContextBuild(ctx) {
+    const history = ctx.history.recent(ctx.config.historyDepth)
+
+    ctx.slots.add("history", history)
+    ctx.slots.add("input", ctx.input)
+
+    return ctx.slots.render()
+  }
+})
+```
+
+#
+
+## What `ctx.config` Is Not
 
 `ctx.config` is not the model parameter surface.
 
-Model temperature, output token limits, and provider-level settings are not exposed here as a separate `ctx` config API today.
+Provider-level settings such as:
+
+- temperature
+- max tokens
+- top-p
+- model selection
+
+are not exposed through `ctx.config`.
+
+These belong to the model runtime layer rather than the strategy configuration surface.
+
+#
+#

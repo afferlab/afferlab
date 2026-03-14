@@ -1,4 +1,5 @@
 import { parentPort } from 'node:worker_threads'
+import { cloneValidatedConfigSchema } from '../../core/strategy/configSchema'
 
 type DevWorkerRequest = {
     id: string
@@ -190,7 +191,9 @@ async function runSmokeTest(code: string): Promise<Omit<DevWorkerResponse, 'id'>
         const dataUrl = `data:text/javascript;base64,${Buffer.from(code).toString('base64')}`
         const mod = (await import(dataUrl)) as Record<string, unknown>
         exportsDetected = detectExports(mod)
-        paramsSchema = mod.configSchema
+        const defaultExport = isRecord(mod.default) ? mod.default : null
+        const rawConfigSchema = mod.configSchema ?? defaultExport?.configSchema
+        paramsSchema = cloneValidatedConfigSchema(rawConfigSchema)
 
         const meta = (isRecord(mod.meta) ? mod.meta : null)
             ?? (isRecord(mod.default) && isRecord(mod.default.meta) ? mod.default.meta : null)
@@ -211,15 +214,21 @@ async function runSmokeTest(code: string): Promise<Omit<DevWorkerResponse, 'id'>
             throw new Error('meta.description must be <= 240 characters')
         }
 
-        if (typeof mod.configSchema !== 'undefined') {
+        if (typeof rawConfigSchema !== 'undefined') {
             try {
-                const serialized = JSON.stringify(mod.configSchema)
+                const serialized = JSON.stringify(rawConfigSchema)
                 if (!serialized) {
                     throw new Error('configSchema must be JSON-serializable')
                 }
             } catch (err) {
                 const msg = err instanceof Error ? err.message : String(err)
                 throw new Error(`configSchema must be JSON-serializable: ${msg}`)
+            }
+            try {
+                paramsSchema = cloneValidatedConfigSchema(rawConfigSchema)
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err)
+                throw new Error(msg)
             }
         }
 
