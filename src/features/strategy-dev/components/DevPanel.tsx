@@ -328,31 +328,21 @@ export default function DevPanel() {
         : "--"
 
     const fallbackModelId =
-        latestTurn?.inputEvent?.data?.model?.id
-        ?? selectedConversation?.model
+        selectedConversation?.model
         ?? activeModelId
         ?? lastUsedModelId
         ?? null
     const fallbackModel = fallbackModelId ? modelMap[fallbackModelId] : undefined
-    const modelProvider =
-        latestTurn?.inputEvent?.data?.model?.provider
-        ?? fallbackModel?.provider
     const effectiveCapabilities =
         latestTurn?.inputEvent?.data?.capabilities
-        ?? fallbackModel?.capabilities
-    const nativeFilesEnabled = effectiveCapabilities?.nativeFiles === true
-    const supportedMimeTypes = effectiveCapabilities?.supportedMimeTypes ?? []
-    const supportedMimeLabel = supportedMimeTypes.length > 0
-        ? `${supportedMimeTypes.length} types`
-        : nativeFilesEnabled
-            ? '0 types'
-            : '--'
-    const fileLimitsLabel = nativeFilesEnabled
-        ? `${effectiveCapabilities?.maxFilesPerTurn ?? '--'} files / ${effectiveCapabilities?.maxFileSizeMB ?? '--'} MB`
-        : '--'
+        ?? (fallbackModel ? {
+            vision: fallbackModel.capabilities?.vision,
+            structuredOutput: fallbackModel.capabilities?.json,
+            tools: fallbackModel.capabilities?.tools,
+        } : undefined)
     const modelLabel =
-        fallbackModelId && modelProvider
-            ? `${modelProvider}/${fallbackModelId}`
+        fallbackModelId && fallbackModel?.provider
+            ? `${fallbackModel.provider}/${fallbackModelId}`
             : fallbackModelId ?? "--"
 
     const strategyName =
@@ -603,14 +593,11 @@ export default function DevPanel() {
                         >
                             <div className="space-y-1">
                                 <KeyValueRow label="Model" value={modelLabel} />
-                                <KeyValueRow label="Provider" value={modelProvider ?? '--'} />
+                                <KeyValueRow label="Provider" value={fallbackModel?.provider ?? '--'} />
                                 <KeyValueRow label="Strategy" value={strategyName} />
-                                <KeyValueRow
-                                    label="Native Files"
-                                    value={nativeFilesEnabled ? 'Enabled' : 'Disabled'}
-                                />
-                                <KeyValueRow label="Supported Mimes" value={supportedMimeLabel} />
-                                <KeyValueRow label="File Limits" value={fileLimitsLabel} />
+                                <KeyValueRow label="Tools" value={effectiveCapabilities?.tools ? 'Enabled' : 'Disabled'} />
+                                <KeyValueRow label="Vision" value={effectiveCapabilities?.vision ? 'Enabled' : 'Disabled'} />
+                                <KeyValueRow label="Structured Output" value={effectiveCapabilities?.structuredOutput ? 'Enabled' : 'Disabled'} />
                                 <KeyValueRow
                                     label="Max Tokens"
                                     value={

@@ -3,33 +3,67 @@ title: ctx.capabilities
 description: ctx.capabilities exposes the final model capability flags resolved for the current turn.
 ---
 
-# ctx.capabilities
+#
 
-`ctx.capabilities` contains the final capability flags for the selected model on the current turn.
+## Overview
 
-## Current Fields
+`ctx.capabilities` contains the final capability flags for the model selected on the current turn.
 
-The worker context currently exposes:
+These flags describe what the active model is able to do so strategies can adjust their behavior accordingly.
+
+## Shape
+
+```ts
+interface Capabilities {
+  vision: boolean
+  structuredOutput: boolean
+  tools: boolean
+}
+```
+
+## Fields
+
+The runtime currently exposes:
 
 - `vision`
-- `tools`
 - `structuredOutput`
-- `nativeFiles`
-- `attachmentTransport`
-- `supportedMimeTypes`
-- `maxFileSizeMB`
-- `maxFilesPerTurn`
+- `tools`
 
-## Why This Matters
+## Field Meanings
 
-These fields let a strategy branch on what the active model can really do.
+### vision
 
-Examples:
+Indicates whether the current model supports image understanding.
 
-- only offer tools when `ctx.capabilities.tools` is true
-- only rely on file-native behavior when `ctx.capabilities.nativeFiles` is true
-- adjust attachment behavior based on `attachmentTransport`
+When `vision` is `true`, strategies may include image attachments in prompts and expect the model to process them.
+
+### structuredOutput
+
+Indicates whether the model supports structured output constraints such as JSON schema enforcement.
+
+When enabled, strategies may rely on structured response formats instead of prompt-based JSON instructions.
+
+### tools
+
+Indicates whether the model supports tool/function calling.
+
+When `true`, strategies may register tools and allow the model to invoke them during generation.
 
 ## Source of Truth
 
-These values are assembled from the resolved model config, not guessed inside the worker.
+Capability values are resolved by the host from the selected model configuration.
+
+Strategies should treat these flags as read-only indicators of the model’s available features.
+
+## Usage
+
+Strategies may branch behavior based on the active model capabilities:
+
+```ts
+if (ctx.capabilities.vision) {
+  // include image attachments
+}
+
+if (ctx.capabilities.tools) {
+  // enable tool usage
+}

@@ -178,6 +178,12 @@ export type Budget = {
     remainingInputTokens: number
 }
 
+export type Capabilities = {
+    vision: boolean
+    structuredOutput: boolean
+    tools: boolean
+}
+
 export type HistoryHelper = {
     lastUser(): Message | null
     lastAssistant(): Message | null
@@ -285,20 +291,7 @@ export type LoomaContext = {
     message: LoomaMessage | null
     config: Record<string, unknown>
     budget: Budget
-    capabilities: {
-        vision: boolean
-        tools: boolean
-        structuredOutput: boolean
-        nativeFiles: boolean
-        attachmentTransport?: string
-        supportedMimeTypes: string[]
-        maxFileSizeMB?: number
-        maxFilesPerTurn?: number
-    }
-    model: {
-        id: string
-        provider: string
-    }
+    capabilities: Capabilities
     slots: SlotsAPI
     tools: ToolsAPI
     utils: {
@@ -545,7 +538,6 @@ export type StrategyDevEvent =
             input: LoomaContext['input']
             budget: LoomaContext['budget']
             capabilities: LoomaContext['capabilities']
-            model: LoomaContext['model']
             config: LoomaContext['config']
             message: LoomaContext['message'] | null
             historyPreview?: Array<{ role: string; content: string | null }>

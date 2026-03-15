@@ -4,6 +4,7 @@ import type {
     LoomaContext,
     LoomaMessage,
     Budget,
+    Capabilities,
     Attachment,
     MessageContentPart,
     RuntimeMessage,
@@ -36,6 +37,7 @@ type BuildContextInput = {
     strategyId?: string
     configValues?: Record<string, unknown>
     budgetValues?: Budget
+    capabilityValues?: Capabilities
     message?: LoomaMessage | null
     dev?: {
         emit?: (event: Omit<StrategyDevEvent, 'conversationId' | 'strategyId' | 'timestamp'>) => void
@@ -70,6 +72,14 @@ function resolveBudget(input: BuildContextInput): Budget {
         remainingInputTokens: Math.max(0, maxInputTokens - fallbackReservedTokens),
     }
     return input.budgetValues ?? fallbackBudget
+}
+
+function resolveCapabilities(input: BuildContextInput): Capabilities {
+    return input.capabilityValues ?? {
+        vision: input.model?.capabilities?.vision ?? false,
+        structuredOutput: input.model?.capabilities?.json ?? false,
+        tools: input.model?.capabilities?.tools ?? false,
+    }
 }
 
 export async function buildContext(input: BuildContextInput): Promise<LoomaContext> {
@@ -109,6 +119,7 @@ export async function buildContext(input: BuildContextInput): Promise<LoomaConte
         : []
     const devEmit = input.dev?.emit
     const budget = Object.freeze({ ...resolveBudget(input) }) as Budget
+    const capabilities = Object.freeze({ ...resolveCapabilities(input) }) as Capabilities
     const slots = createSlotsApi({
         tokenBudget: budget.remainingInputTokens,
         estimateMessages: (messages) => estimateTokensForMessages(messages),
@@ -139,20 +150,7 @@ export async function buildContext(input: BuildContextInput): Promise<LoomaConte
         message: input.message ?? null,
         config,
         budget,
-        capabilities: {
-            vision: model?.capabilities?.vision ?? false,
-            tools: model?.capabilities?.tools ?? false,
-            structuredOutput: model?.capabilities?.json ?? false,
-            nativeFiles: model?.capabilities?.nativeFiles === true,
-            attachmentTransport: model?.capabilities?.attachmentTransport ?? 'none',
-            supportedMimeTypes: model?.capabilities?.supportedMimeTypes ?? [],
-            maxFileSizeMB: model?.capabilities?.maxFileSizeMB,
-            maxFilesPerTurn: model?.capabilities?.maxFilesPerTurn,
-        },
-        model: {
-            id: model?.id ?? 'unknown',
-            provider: model?.provider ?? 'unknown',
-        },
+        capabilities,
         slots,
         tools,
         utils: {

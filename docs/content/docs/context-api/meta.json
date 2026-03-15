@@ -8,7 +8,6 @@
     "ctx-config",
     "ctx-budget",
     "ctx-capabilities",
-    "ctx-model",
     "ctx-slots",
     "ctx-tools",
     "ctx-utils"

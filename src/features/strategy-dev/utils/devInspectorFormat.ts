@@ -88,13 +88,10 @@ type NormalizedEventData = {
     status?: string
     entries?: Array<{ name?: string; messages?: Message[]; key?: string; value?: unknown }>
     historySelection?: NormalizedHistorySelection
-    model?: { provider?: string; id?: string }
     capabilities?: {
         tools?: boolean
         vision?: boolean
         structuredOutput?: boolean
-        nativeFiles?: boolean
-        attachmentTransport?: string
     }
     message?: NormalizedResultMessage | string | null
     messages?: Message[]
@@ -467,15 +464,11 @@ function buildInputRow(vm: TurnViewModel, anchorTs: number): DevInspectorRow {
     const preview = textClean ? `"${truncateText(textClean, 60)}"` : "-"
     const attachments = vm.inputEvent?.data?.input?.attachments ?? []
     const historySelection = vm.inputEvent?.data?.historySelection
-    const model = vm.inputEvent?.data?.model?.provider && vm.inputEvent?.data?.model?.id
-        ? `${vm.inputEvent.data.model.provider}:${vm.inputEvent.data.model.id}`
-        : "unknown"
     const caps = vm.inputEvent?.data?.capabilities
 
     const primaryFields: RowField[] = [
         { label: "text", value: preview },
         { label: "attachments", value: String(attachments.length) },
-        { label: "model", value: model },
     ]
 
     const secondaryFields: RowField[] = []
@@ -483,12 +476,8 @@ function buildInputRow(vm: TurnViewModel, anchorTs: number): DevInspectorRow {
         secondaryFields.push(
             { label: "tools", value: caps.tools ? "on" : "off", tone: caps.tools ? "ok" : "muted" },
             { label: "vision", value: caps.vision ? "on" : "off", tone: caps.vision ? "ok" : "muted" },
-            { label: "json", value: caps.structuredOutput ? "on" : "off", tone: caps.structuredOutput ? "ok" : "muted" },
-            { label: "nativeFiles", value: caps.nativeFiles ? "on" : "off", tone: caps.nativeFiles ? "ok" : "muted" }
+            { label: "json", value: caps.structuredOutput ? "on" : "off", tone: caps.structuredOutput ? "ok" : "muted" }
         )
-        if (caps.attachmentTransport) {
-            secondaryFields.push({ label: "transport", value: String(caps.attachmentTransport) })
-        }
     }
     if (historySelection) {
         secondaryFields.push({
