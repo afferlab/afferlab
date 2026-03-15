@@ -171,6 +171,13 @@ export type LoomaMessage = {
     finishReason?: 'stop' | 'length' | 'tool_calls' | 'error'
 }
 
+export type Budget = {
+    maxInputTokens: number
+    maxOutputTokens: number
+    reservedTokens: number
+    remainingInputTokens: number
+}
+
 export type HistoryHelper = {
     lastUser(): Message | null
     lastAssistant(): Message | null
@@ -277,12 +284,7 @@ export type LoomaContext = {
     history: HistoryHelper
     message: LoomaMessage | null
     config: Record<string, unknown>
-    budget: {
-        maxInputTokens: number
-        maxOutputTokens: number
-        reservedTokens: number
-        remainingInputTokens: number
-    }
+    budget: Budget
     capabilities: {
         vision: boolean
         tools: boolean

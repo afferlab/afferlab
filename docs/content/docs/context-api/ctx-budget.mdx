@@ -3,36 +3,93 @@ title: ctx.budget
 description: ctx.budget exposes the host-computed token budget numbers for the current turn.
 ---
 
-# ctx.budget
+#
 
-`ctx.budget` provides the token budget numbers computed before prompt construction.
+## Overview
 
-## Current Fields
+`ctx.budget` exposes the token budget computed by the host before prompt construction.
 
-The current runtime exposes:
+These values represent the prompt capacity available to the strategy for the current turn.
 
-- `maxInputTokens`
-- `maxOutputTokens`
-- `reservedTokens`
-- `remainingInputTokens`
+The host derives these numbers from the selected model configuration and internal platform constraints.
 
-## How They Are Computed Today
+Strategies should treat this information as **read-only budgeting hints** when assembling prompts.
 
-These values are derived from the selected model config plus host defaults.
+#
 
-In the current implementation:
+## Shape
 
-- `maxInputTokens` comes from model limits/defaults
-- `maxOutputTokens` comes from model limits/defaults
-- `reservedTokens` is currently a fixed host reserve
-- `remainingInputTokens` is `maxInputTokens - reservedTokens`
+```ts
+interface Budget {
+  maxInputTokens: number
+  maxOutputTokens: number
+  reservedTokens: number
+  remainingInputTokens: number
+}
+```
 
-## What to Use It For
+#
 
-Strategies should treat this as a read-only budgeting hint for prompt assembly.
+## Fields
 
-It is especially useful when deciding:
+### maxInputTokens
 
-- how much history to keep
-- whether to include large memory blocks
-- how aggressively to trim context before rendering prompt messages
+The maximum number of tokens the host allows for prompt input for the current model.
+
+This value is derived from the model's capabilities and host configuration.
+
+#
+
+### maxOutputTokens
+
+The maximum number of tokens the model may generate for this turn.
+
+This value typically reflects the user-configured output limit in model settings.
+
+#
+
+### reservedTokens
+
+A portion of the prompt budget reserved by the host for internal use.
+
+This may include system prompts, platform instructions, or safety margins.
+
+#
+
+### remainingInputTokens
+
+The token budget available to the strategy when assembling prompt messages.
+
+Strategies should use this value when deciding how much history or memory content to include.
+
+#
+
+## Usage
+
+Strategies typically consult the budget when selecting or trimming context.
+
+Example:
+
+```ts
+const history = ctx.history.byTokens(
+  ctx.budget.remainingInputTokens * 0.6
+)
+
+ctx.slots.add("history", history)
+ctx.slots.add("input", ctx.input)
+
+return ctx.slots.render()
+```
+
+#
+
+## Notes
+
+`ctx.budget` values are computed by the host and depend on the selected model and platform configuration.
+
+Strategies should treat these numbers as **guidelines for prompt construction**, not exact guarantees.
+
+Token estimation may vary depending on tokenizer behavior and provider implementation.
+
+#
+#

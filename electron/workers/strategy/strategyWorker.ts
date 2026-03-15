@@ -5,6 +5,7 @@ import type {
     StrategyScope,
     LoomaContext,
     LoomaMessage,
+    Budget,
     Message,
     StrategyModule,
     StrategyContextBuildOutput,
@@ -59,6 +60,7 @@ type StrategyRequestPayload = {
     strategyId?: string
     strategyEntryPath?: string
     configValues?: Record<string, unknown>
+    budgetValues?: Budget
     message?: LoomaMessage | null
     devMode?: boolean
 }
@@ -382,6 +384,7 @@ async function ensureStrategy(payload?: StrategyRequestPayload): Promise<Strateg
                 model: payload.model,
                 strategyId: payload.strategyId,
                 configValues: payload.configValues,
+                budgetValues: payload.budgetValues,
                 dev: { emit: (event) => emitDevEvent({ ...event, phase: resolvePhaseForEvent(event, 'context') }) },
             })
             : null
@@ -452,6 +455,7 @@ parentPort.on('message', async (req: StrategyWorkerRequest | WorkerEnvelope) => 
                     model: payload.model,
                     strategyId: payload.strategyId,
                     configValues: payload.configValues,
+                    budgetValues: payload.budgetValues,
                     dev: { emit: (event) => emitDevEvent({ ...event, phase: resolvePhaseForEvent(event, 'context') }) },
                 })
                 lastCtx = ctx
@@ -510,6 +514,7 @@ parentPort.on('message', async (req: StrategyWorkerRequest | WorkerEnvelope) => 
                             model: payload.model,
                             strategyId: payload.strategyId,
                             configValues: payload.configValues,
+                            budgetValues: payload.budgetValues,
                             message: payload.message ?? null,
                             dev: { emit: (event) => emitDevEvent({ ...event, phase: resolvePhaseForEvent(event, 'turnEnd') }) },
                         })
@@ -544,6 +549,7 @@ parentPort.on('message', async (req: StrategyWorkerRequest | WorkerEnvelope) => 
                     model: payload.model,
                     strategyId: payload.strategyId,
                     configValues: payload.configValues,
+                    budgetValues: payload.budgetValues,
                     message: payload.message ?? null,
                     dev: { emit: (event) => emitDevEvent({ ...event, phase: resolvePhaseForEvent(event, 'turnEnd') }) },
                 })

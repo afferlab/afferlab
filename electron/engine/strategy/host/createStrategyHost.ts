@@ -14,6 +14,7 @@ import { listStrategyState } from '../../../core/strategy/stateStore'
 import { getModelById } from '../../../core/models/modelRegistry'
 import { LLMRunner } from '../../llm/llmRunner'
 import { applyContextStats } from './contextBuild'
+import { computeStrategyBudget } from './budget'
 import { hashMessages, logStrategyTrace } from './logging'
 import { normalizeToolCalls, toBlueprintToolCall } from './tooling'
 import { contextStore } from '../../../core/context'
@@ -52,6 +53,7 @@ export class StrategyHost {
         const key = historyKey(args.conversationId, args.turnId)
         const strategyRecord = this.resolveStrategyRecord(args.conversationId)
         const configValues = buildStrategyRuntimeConfig(this.db, strategyRecord)
+        const budgetValues = computeStrategyBudget(args.model)
         const isDev = shouldEmitDevEvents({
             strategyId: strategyRecord.id,
             source: strategyRecord.source ?? null,
@@ -92,6 +94,7 @@ export class StrategyHost {
                 strategyId: strategyRecord.id,
                 strategyEntryPath: strategyRecord.entry_path,
                 configValues,
+                budgetValues,
                 devMode: isDev,
             })
             const built = result as StrategyContextBuildResult
@@ -250,6 +253,7 @@ export class StrategyHost {
                 content_parts?: string | null
             } | undefined
             const modelConfig = row?.model ? getModelById(row.model) : undefined
+            const budgetValues = computeStrategyBudget(modelConfig)
             const finishReason = row?.finish_reason === 'stop'
                 || row?.finish_reason === 'length'
                 || row?.finish_reason === 'tool_calls'
@@ -280,6 +284,7 @@ export class StrategyHost {
                 strategyEntryPath: strategyRecord.entry_path,
                 model: modelConfig,
                 configValues,
+                budgetValues,
                 devMode: isDev,
                 message: {
                     id: row?.id ?? args.messageId,
@@ -404,6 +409,7 @@ export class StrategyHost {
             const modelRow = this.db.prepare(`SELECT model FROM conversations WHERE id = ?`)
                 .get(args.conversationId) as { model?: string | null } | undefined
             const model = modelRow?.model ? getModelById(modelRow.model) : undefined
+            const budgetValues = computeStrategyBudget(model)
             const result = await workerManager.requestToolCall(args.conversationId, {
                 ...args,
                 scope,
@@ -411,6 +417,7 @@ export class StrategyHost {
                 strategyEntryPath: strategyRecord.entry_path,
                 model,
                 configValues,
+                budgetValues,
                 devMode: shouldEmitDevEvents({
                     strategyId: strategyRecord.id,
                     source: strategyRecord.source ?? null,

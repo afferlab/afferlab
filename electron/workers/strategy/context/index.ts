@@ -3,6 +3,7 @@ import type {
     LLMModelConfig,
     LoomaContext,
     LoomaMessage,
+    Budget,
     Attachment,
     MessageContentPart,
     RuntimeMessage,
@@ -34,6 +35,7 @@ type BuildContextInput = {
     model?: LLMModelConfig
     strategyId?: string
     configValues?: Record<string, unknown>
+    budgetValues?: Budget
     message?: LoomaMessage | null
     dev?: {
         emit?: (event: Omit<StrategyDevEvent, 'conversationId' | 'strategyId' | 'timestamp'>) => void
@@ -42,6 +44,33 @@ type BuildContextInput = {
 
 type WorkerDevEvent = Omit<StrategyDevEvent, 'conversationId' | 'strategyId' | 'timestamp'>
 type SlotsDevEvent = Extract<WorkerDevEvent, { type: 'slots' }>
+
+function resolveBudget(input: BuildContextInput): Budget {
+    const maxInputTokens = Number(
+        input.model?.limits?.maxContextTokens
+        ?? input.model?.params?.maxContextTokens
+        ?? input.model?.defaults?.maxContextTokens
+        ?? 128_000
+    )
+    const maxOutputTokens = Number(
+        input.model?.params?.maxOutputTokens
+        ?? input.model?.params?.maxTokens
+        ?? input.model?.limits?.maxOutputTokens
+        ?? input.model?.defaults?.maxOutputTokens
+        ?? 4096
+    )
+    const fallbackReservedTokens = Math.min(
+        maxInputTokens,
+        Math.max(1024, maxOutputTokens + 1024),
+    )
+    const fallbackBudget: Budget = {
+        maxInputTokens,
+        maxOutputTokens,
+        reservedTokens: fallbackReservedTokens,
+        remainingInputTokens: Math.max(0, maxInputTokens - fallbackReservedTokens),
+    }
+    return input.budgetValues ?? fallbackBudget
+}
 
 export async function buildContext(input: BuildContextInput): Promise<LoomaContext> {
     const conversationId = input.conversationId
@@ -79,22 +108,9 @@ export async function buildContext(input: BuildContextInput): Promise<LoomaConte
         ? inputPayload.attachments
         : []
     const devEmit = input.dev?.emit
-    const maxInputTokens = Number(
-        model?.limits?.maxContextTokens
-        ?? model?.params?.maxContextTokens
-        ?? model?.defaults?.maxContextTokens
-        ?? 128_000
-    )
-    const maxOutputTokens = Number(
-        model?.limits?.maxOutputTokens
-        ?? model?.params?.maxOutputTokens
-        ?? model?.defaults?.maxOutputTokens
-        ?? 4096
-    )
-    const reservedTokens = 1024
-    const remainingInputTokens = Math.max(0, maxInputTokens - reservedTokens)
+    const budget = Object.freeze({ ...resolveBudget(input) }) as Budget
     const slots = createSlotsApi({
-        tokenBudget: remainingInputTokens,
+        tokenBudget: budget.remainingInputTokens,
         estimateMessages: (messages) => estimateTokensForMessages(messages),
         onUpdate: devEmit
             ? (entries) => devEmit({
@@ -122,12 +138,7 @@ export async function buildContext(input: BuildContextInput): Promise<LoomaConte
         history: historyHelper,
         message: input.message ?? null,
         config,
-        budget: {
-            maxInputTokens,
-            maxOutputTokens,
-            reservedTokens,
-            remainingInputTokens,
-        },
+        budget,
         capabilities: {
             vision: model?.capabilities?.vision ?? false,
             tools: model?.capabilities?.tools ?? false,
