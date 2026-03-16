@@ -31,6 +31,7 @@ type HostRequestType =
     | 'stateGet'
     | 'stateSet'
     | 'stateDelete'
+    | 'stateHas'
     | 'llmCall'
     | 'runLLMLoop'
 type HostRequest = {
@@ -168,6 +169,11 @@ class HostClient {
     async stateDelete(args: { conversationId: string; strategyId: string; key: string }): Promise<{ ok: true }> {
         const result = await this.request('stateDelete', args, { timeoutMs: 8000 })
         return (result as { ok: true }) ?? { ok: true }
+    }
+
+    async stateHas(args: { conversationId: string; strategyId: string; key: string }): Promise<boolean> {
+        const result = await this.request('stateHas', args, { timeoutMs: 8000 })
+        return result === true
     }
 
     async llmCall(args: {

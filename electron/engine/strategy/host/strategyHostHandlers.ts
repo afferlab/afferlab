@@ -2,7 +2,7 @@ import type { Attachment, LLMMessage, MessageContentPart, UIMessage } from '../.
 import { WorkerManager, type HostHandlers } from '../../../workers/strategy/WorkerManager'
 import { getDB } from '../../../db'
 import { getMainlineHistory } from '../../../core/history/getMainlineHistory'
-import { getStrategyState, setStrategyState, deleteStrategyState } from '../../../core/strategy/stateStore'
+import { deleteStrategyState, getStrategyState, hasStrategyState, setStrategyState } from '../../../core/strategy/stateStore'
 import { resolveModelConfig } from '../../../core/models/modelRegistry'
 import { callLLMUniversalNonStream } from '../../../llm'
 import { LLMRunner, type LLMStreamResult } from '../../llm/llmRunner'
@@ -143,6 +143,15 @@ export function buildStrategyHostHandlers(args: {
                 key,
             })
             return { ok: true }
+        },
+        stateHas: async ({ conversationId, strategyId, key }) => {
+            const db = getDB()
+            return hasStrategyState(db, {
+                strategyId,
+                scopeType: 'conversation',
+                scopeId: conversationId,
+                key,
+            })
         },
         llmCall: async ({ conversationId, model, messages, tools, toolChoice, temperature }) => {
             const resolved = resolveModelConfig({

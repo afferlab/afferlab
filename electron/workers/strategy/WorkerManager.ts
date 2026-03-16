@@ -49,6 +49,7 @@ type HostRequest =
     | { kind: 'hostRequest'; id: string; method: 'stateGet'; payload: { conversationId: string; strategyId: string; key: string } }
     | { kind: 'hostRequest'; id: string; method: 'stateSet'; payload: { conversationId: string; strategyId: string; key: string; value: unknown } }
     | { kind: 'hostRequest'; id: string; method: 'stateDelete'; payload: { conversationId: string; strategyId: string; key: string } }
+    | { kind: 'hostRequest'; id: string; method: 'stateHas'; payload: { conversationId: string; strategyId: string; key: string } }
     | { kind: 'hostRequest'; id: string; method: 'llmCall'; payload: { conversationId: string; turnId?: string; model: LLMModelConfig; messages: LLMMessage[]; tools?: ToolDefinition[]; toolChoice?: ToolChoice; temperature?: number } }
     | { kind: 'hostRequest'; id: string; method: 'runLLMLoop'; payload: { conversationId: string; turnId?: string; model: LLMModelConfig; messages: LLMMessage[]; tools?: ToolDefinition[]; toolChoice?: ToolChoice; maxRounds?: number; temperature?: number } }
 
@@ -96,6 +97,7 @@ export type HostHandlers = {
     stateGet?: (args: { conversationId: string; strategyId: string; key: string }) => Promise<unknown>
     stateSet?: (args: { conversationId: string; strategyId: string; key: string; value: unknown }) => Promise<{ ok: true }>
     stateDelete?: (args: { conversationId: string; strategyId: string; key: string }) => Promise<{ ok: true }>
+    stateHas?: (args: { conversationId: string; strategyId: string; key: string }) => Promise<boolean>
     llmCall?: (args: { conversationId: string; turnId?: string; model: LLMModelConfig; messages: LLMMessage[]; tools?: ToolDefinition[]; toolChoice?: ToolChoice; temperature?: number }) => Promise<LLMMessage>
     runLLMLoop?: (args: { conversationId: string; turnId?: string; model: LLMModelConfig; messages: LLMMessage[]; tools?: ToolDefinition[]; toolChoice?: ToolChoice; maxRounds?: number; temperature?: number }) => Promise<RunResult>
     onDevEvent?: (event: StrategyDevEvent) => void
@@ -405,6 +407,15 @@ export class WorkerManager {
                     throw new Error('stateDelete not supported')
                 }
                 const result = await this.hostHandlers.stateDelete(req.payload)
+                const res: HostResponse = { kind: 'hostResponse', id: req.id, ok: true, result }
+                handle.worker.postMessage(res)
+                return
+            }
+            if (req.method === 'stateHas') {
+                if (!this.hostHandlers.stateHas) {
+                    throw new Error('stateHas not supported')
+                }
+                const result = await this.hostHandlers.stateHas(req.payload)
                 const res: HostResponse = { kind: 'hostResponse', id: req.id, ok: true, result }
                 handle.worker.postMessage(res)
                 return

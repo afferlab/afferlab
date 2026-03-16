@@ -138,6 +138,9 @@ export async function buildContext(input: BuildContextInput): Promise<LoomaConte
         strategyId: input.strategyId,
         devEmit,
     })
+    const llm = tools.llm
+    const state = tools.state
+    const memory = tools.memory
 
     const historyHelper = createHistoryHelper(historyMessages)
 
@@ -152,6 +155,9 @@ export async function buildContext(input: BuildContextInput): Promise<LoomaConte
         budget,
         capabilities,
         slots,
+        llm,
+        state,
+        memory,
         tools,
         utils: {
             measure: (text: string) => measureTokens(text),

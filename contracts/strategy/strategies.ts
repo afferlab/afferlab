@@ -251,39 +251,46 @@ export type MemoryIngestSource =
     | { text?: string; data?: Uint8Array; filename?: string; mime?: string }
 export type MemoryIngestInput = MemoryIngestSource | MemoryIngestSource[]
 
-export type ToolsAPI = {
-    llm: {
-        call(input: string | Message[]): Promise<Message>
-        call(
-            messages: LLMMessage[],
-            options?: {
-                tools?: ToolDefinition[]
-                toolChoice?: ToolChoice
-                temperature?: number
-            }
-        ): Promise<LLMMessage>
-        run(options: {
-            messages: LLMMessage[]
+export type LLMTools = {
+    call(input: string | Message[]): Promise<Message>
+    call(
+        messages: LLMMessage[],
+        options?: {
             tools?: ToolDefinition[]
             toolChoice?: ToolChoice
-            maxRounds?: number
-            onToolCall?: (call: { id: string; name: string; args: Record<string, unknown> }) => Promise<string>
             temperature?: number
-        }): Promise<RunResult>
-    }
-    state: {
-        get<T = unknown>(key: string): Promise<T | null>
-        set(key: string, value: unknown): Promise<void>
-        delete(key: string): Promise<void>
-    }
-    memory: {
-        query(options?: MemoryQueryOptions): Promise<UIMemoryCloudItem[]>
-        search(query: string, options?: MemorySearchOptions): Promise<MemoryHit[]>
-        ingest(input: MemoryIngestInput, options?: MemoryIngestOptions): Promise<MemoryIngestResult | MemoryIngestResult[]>
-        readAsset(asset: Attachment | string, maxChars?: number): Promise<string>
-        retireBySourceMessage(messageId: string): Promise<{ retired: number }>
-        retireMemory(memoryId: string): Promise<{ retired: boolean }>
-    }
+        }
+    ): Promise<LLMMessage>
+    run(options: {
+        messages: LLMMessage[]
+        tools?: ToolDefinition[]
+        toolChoice?: ToolChoice
+        maxRounds?: number
+        onToolCall?: (call: { id: string; name: string; args: Record<string, unknown> }) => Promise<string>
+        temperature?: number
+    }): Promise<RunResult>
+}
+
+export type StateTools = {
+    get<T = unknown>(key: string): Promise<T | null>
+    set(key: string, value: unknown): Promise<void>
+    delete(key: string): Promise<void>
+    has(key: string): Promise<boolean>
+}
+
+export type MemoryAPI = {
+    query(options?: MemoryQueryOptions): Promise<UIMemoryCloudItem[]>
+    search(query: string, options?: MemorySearchOptions): Promise<MemoryHit[]>
+    ingest(input: MemoryIngestInput, options?: MemoryIngestOptions): Promise<MemoryIngestResult | MemoryIngestResult[]>
+    readAsset(asset: Attachment | string, maxChars?: number): Promise<string>
+    retireBySourceMessage(messageId: string): Promise<{ retired: number }>
+    retireMemory(memoryId: string): Promise<{ retired: boolean }>
+}
+
+export type ToolsAPI = {
+    llm: LLMTools
+    state: StateTools
+    memory: MemoryAPI
 }
 
 export type LoomaContext = {
@@ -294,6 +301,9 @@ export type LoomaContext = {
     budget: Budget
     capabilities: Capabilities
     slots: SlotsAPI
+    llm: LLMTools
+    state: StateTools
+    memory: MemoryAPI
     tools: ToolsAPI
     utils: {
         measure(text: string): number

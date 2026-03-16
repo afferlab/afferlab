@@ -66,6 +66,33 @@ function createMockCtx() {
     const state = new Map<string, unknown>()
     const slotEntries: Array<{ name: string; content: unknown }> = []
     let slotsAdded = 0
+    const llm = {
+        call: async () => ({ role: 'assistant', content: '' }),
+        run: async () => ({ content: '', finishReason: 'stop', messages: [] }),
+    }
+    const stateApi = {
+        get: async (key: string) => (state.get(key) as unknown) ?? null,
+        set: async (key: string, value: unknown) => {
+            state.set(key, value)
+        },
+        delete: async (key: string) => {
+            state.delete(key)
+        },
+        has: async (key: string) => state.has(key),
+    }
+    const memory = {
+        query: async () => [],
+        search: async () => [],
+        ingest: async () => ({ assetId: '', chunkCount: 0, status: 'completed' as const }),
+        readAsset: async () => '',
+        retireBySourceMessage: async () => ({ retired: 0 }),
+        retireMemory: async () => ({ retired: false }),
+    }
+    const tools = {
+        llm,
+        state: stateApi,
+        memory,
+    }
 
     return {
         ctx: {
@@ -104,17 +131,10 @@ function createMockCtx() {
                     return { messages }
                 },
             },
-            tools: {
-                state: {
-                    get: (key: string) => state.get(key),
-                    set: (key: string, value: unknown) => {
-                        state.set(key, value)
-                    },
-                    delete: (key: string) => {
-                        state.delete(key)
-                    },
-                },
-            },
+            llm,
+            state: stateApi,
+            memory,
+            tools,
             utils: {
                 now: () => Date.now(),
                 uuid: () => `mock-${Math.random().toString(36).slice(2, 10)}`,
