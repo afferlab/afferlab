@@ -1,30 +1,117 @@
 ---
 title: ctx.utils
-description: ctx.utils contains small host-provided utility helpers available in every strategy context.
+description: ctx.utils provides lightweight utility helpers available in every strategy context.
 ---
 
-# ctx.utils
+#
 
-`ctx.utils` contains lightweight helpers that are safe to expose in every strategy context.
+## Shape
 
-## Current Helpers
+```ts
+interface UtilsAPI {
+  measure(input: MeasureInput): number
+  now(): number
+}
 
-The live runtime currently provides:
+type MeasureInput =
+  | string
+  | Message
+  | Message[]
+  | Attachment
+  | Attachment[]
+```
 
-- `measure(text)`
-- `now()`
-- `uuid()`
+---
 
-## What They Do
+## Overview
 
-- `measure(text)` returns an approximate token count
-- `now()` returns the current Unix epoch time in milliseconds
-- `uuid()` returns a random UUID
+`ctx.utils` provides a minimal set of generic, model-agnostic helpers available in every strategy context.
+
+These utilities:
+
+- do not depend on any specific LLM
+- do not require external services
+- behave consistently across environments
+
+They are primarily used during context construction and strategy execution.
+
+---
+
+## Methods
+
+### measure(input)
+
+Returns a normalized cost estimate for the given input.
+
+This function supports text, messages, and attachments, and is designed for budgeting and relative comparison during context construction.
+
+**input:** `MeasureInput`
+
+Supported inputs include:
+
+- raw text (`string`)
+- a single message (`Message`)
+- an array of messages (`Message[]`)
+- a single attachment (`Attachment`)
+- an array of attachments (`Attachment[]`)
+
+**Return:** `number`
+
+**Important:**
+
+- The result is an approximation
+- It does not correspond to exact token usage of any specific model
+- It is intended for relative comparison (e.g. “this is larger than that”)
+
+**Behavior:**
+
+- text → estimated by length
+- messages → aggregates content and attachments
+- attachments → estimated using type-specific heuristics (e.g. image, document, audio)
+
+Example:
+
+```ts
+const cost = ctx.utils.measure(ctx.history.recent(12))
+
+if (cost > 8000) {
+  // reduce memory injection
+}
+```
+
+---
+
+### now()
+
+Returns the current Unix timestamp in milliseconds.
+
+**Return:** `number`
+
+Example:
+
+```ts
+const timestamp = ctx.utils.now()
+```
+
+---
 
 ## Recommended Use
 
-Use these helpers for:
+Use `ctx.utils` for:
 
-- quick token heuristics
-- timestamps in state or memory metadata
-- stable local identifiers for strategy-generated records
+- estimating context cost before building prompts
+- controlling memory or slot injection based on budget
+- recording timestamps in metadata
+
+---
+
+## Notes
+
+- `measure()` provides a normalized cost estimate, not an exact token count
+- results may vary slightly depending on runtime heuristics
+- strategies should use it for decision-making, not precise accounting
+
+`ctx.utils` is intentionally minimal to keep the strategy environment predictable and stable.
+
+#
+#

@@ -107,6 +107,13 @@ export type Message = {
     attachments?: Attachment[]
 }
 
+export type MeasureInput =
+    | string
+    | Message
+    | Message[]
+    | Attachment
+    | Attachment[]
+
 export type LLMMessage = Message | {
     role: 'assistant'
     content: string | null
@@ -299,9 +306,8 @@ export type LoomaContext = {
     memory: MemoryAPI
     tools: ToolsAPI
     utils: {
-        measure(text: string): number
+        measure(input: MeasureInput): number
         now(): number
-        uuid(): string
     }
 }
 

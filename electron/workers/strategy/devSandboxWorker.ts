@@ -1,5 +1,6 @@
 import { parentPort } from 'node:worker_threads'
 import { cloneValidatedConfigSchema } from '../../core/strategy/configSchema'
+import { measure } from './context/utils'
 
 type DevWorkerRequest = {
     id: string
@@ -135,8 +136,8 @@ function createMockCtx() {
             memory,
             tools,
             utils: {
+                measure,
                 now: () => Date.now(),
-                uuid: () => `mock-${Math.random().toString(36).slice(2, 10)}`,
             },
         },
         getSlotsAdded: () => slotsAdded,

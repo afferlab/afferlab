@@ -1,4 +1,3 @@
-import crypto from 'node:crypto'
 import type {
     LLMModelConfig,
     LoomaContext,
@@ -13,7 +12,7 @@ import type {
 import { hostClient } from '../hostClient'
 import { createSlotsApi } from './slots'
 import { createHistoryHelper } from './history'
-import { measureTokens } from './utils'
+import { measure } from './utils'
 import { createToolsApi } from './tools'
 import { parseMessageContentParts } from '../../../../shared/chat/contentParts'
 import { estimateTokensForMessages } from '../../../core/tokens/tokenizer'
@@ -160,9 +159,8 @@ export async function buildContext(input: BuildContextInput): Promise<LoomaConte
         memory,
         tools,
         utils: {
-            measure: (text: string) => measureTokens(text),
+            measure,
             now: () => Date.now(),
-            uuid: () => crypto.randomUUID(),
         },
     }
 }
