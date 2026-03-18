@@ -88,7 +88,6 @@ export default function ChatInput({ className, onRegisterFileDropHandler }: Chat
     const autoAssignedStrategies = useRef<Set<string>>(new Set())
     const lastStrategyId = useRef<string | null>(null)
     const [forceWebSearch, setForceWebSearch] = useState(false)
-    const [webSearchEnabled, setWebSearchEnabled] = useState<boolean | null>(null)
 
     // Measure the real ChatInput height, including padding and the draft bar
     const rootRef = useRef<HTMLDivElement | null>(null)
@@ -160,16 +159,6 @@ export default function ChatInput({ className, onRegisterFileDropHandler }: Chat
                 available: entry.status.available,
             }))
         setFavoriteModels(filtered)
-        let ws: unknown = settings.appSettings?.web_search_settings
-        if (typeof ws === 'string') {
-            try {
-                ws = JSON.parse(ws)
-            } catch {
-                ws = null
-            }
-        }
-        const parsed = ws && typeof ws === 'object' ? (ws as { enabled?: boolean }) : {}
-        setWebSearchEnabled(parsed.enabled ?? true)
     }
 
     useEffect(() => {
@@ -204,10 +193,6 @@ export default function ChatInput({ className, onRegisterFileDropHandler }: Chat
     useEffect(() => {
         pendingModelId.current = null
         pendingStrategyId.current = null
-    }, [selectedConversation?.id])
-
-    useEffect(() => {
-        setForceWebSearch(false)
     }, [selectedConversation?.id])
 
     useEffect(() => {
@@ -393,7 +378,6 @@ export default function ChatInput({ className, onRegisterFileDropHandler }: Chat
                     attachments: attachmentsForSend,
                 })
                 setDraftAttachments([])
-        setForceWebSearch(false)
             } catch (err) {
                 console.error('[send] create conversation failed', err)
             }
@@ -408,7 +392,6 @@ export default function ChatInput({ className, onRegisterFileDropHandler }: Chat
             attachments: attachmentsForSend,
         })
         setDraftAttachments([])
-        setForceWebSearch(false)
     }
 
     const handleStop = async () => {
@@ -656,18 +639,7 @@ export default function ChatInput({ className, onRegisterFileDropHandler }: Chat
     ])
 
     const handleToggleWebSearch = async () => {
-        const next = !forceWebSearch
-        setForceWebSearch(next)
-        if (next && webSearchEnabled === false) {
-            try {
-                await window.chatAPI.settings.updateApp({
-                    web_search_settings: { enabled: true },
-                })
-                setWebSearchEnabled(true)
-            } catch (err) {
-                console.warn('[websearch] failed to enable setting', err)
-            }
-        }
+        setForceWebSearch((current) => !current)
     }
 
     useEffect(() => {

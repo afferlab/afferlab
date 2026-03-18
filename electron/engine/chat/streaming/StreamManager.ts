@@ -6,10 +6,7 @@ import { LLMRunner } from '../../llm/llmRunner'
 import { callLLMUniversalNonStream, getProviderCtxSource } from '../../../llm'
 import { getModelById, getProviderConfigForModel, resolveModelConfig } from '../../../core/models/modelRegistry'
 import { maybeAutoTitleConversation } from '../../../core/conversation/autoTitle'
-import { StrategyHost } from '../../strategy/host/createStrategyHost'
 import { emitStrategyDevEvent } from '../../strategy/dev/devEventBus'
-import { getEffectiveToolsForRun, getEffectiveStrategies } from '../../settings/services/effectiveConfig'
-import { getWebSearchSettings } from '../../settings/services/settingsStore'
 import { shouldRunTurnEndForMode } from '../../../core/flow/turnMode'
 import {
     AttachmentCapabilityError,
@@ -69,7 +66,7 @@ export type StartParams = {
     }
 }
 
-type SearchMode = 'off' | 'native' | 'tool'
+type SearchMode = 'off' | 'native'
 
 function resolveSearchMode(args: {
     searchEnabled: boolean
@@ -77,7 +74,6 @@ function resolveSearchMode(args: {
 }): SearchMode | 'unsupported' {
     if (!args.searchEnabled) return 'off'
     if (args.model.capabilities?.nativeSearch === true) return 'native'
-    if (args.model.capabilities?.tools === true) return 'tool'
     return 'unsupported'
 }
 
@@ -117,7 +113,6 @@ export class StreamManager extends EventEmitter {
         const runMode: TurnRunMode = mode ?? 'normal'
         const db = this.deps.getDB()
         const turnWriter = new TurnWriter(db)
-        const strategyHost = new StrategyHost(db)
         const trace: StreamTimingTrace = p.trace ?? { t0: Date.now() }
         const t0 = trace.t0
         const streamLog = (
@@ -251,7 +246,6 @@ export class StreamManager extends EventEmitter {
             return
         }
 
-        const TOOLS_DISABLED = false
         const convRow = db.prepare(`SELECT strategy_id FROM conversations WHERE id = ?`)
             .get(conversationId) as { strategy_id?: string | null } | undefined
         const strategyRow = convRow?.strategy_id
@@ -279,118 +273,8 @@ export class StreamManager extends EventEmitter {
                 ts: event.ts ?? now,
             } as StrategyDevEvent)
         }
-        let toolDefs: ToolDef[] = []
-        if (!TOOLS_DISABLED && searchMode === 'tool') {
-            try {
-                toolDefs = await getEffectiveToolsForRun(db, {
-                    conversationId,
-                    strategyId: convRow?.strategy_id ?? undefined,
-                })
-            } catch (err) {
-                streamLog('warn', 'TOOLS_LIST_FAILED', {
-                    error: err instanceof Error ? err.message : String(err),
-                })
-                toolDefs = []
-            }
-        }
-        streamLog('debug', 'TOOLS_RAW', { tools: toolDefs.map(tool => tool.name) }, { debugFlag: 'DEBUG_TOOLS' })
-        toolDefs = toolDefs.filter(tool => tool.name === 'builtin.web_search' || tool.name === 'builtin.web_fetch')
-        streamLog('debug', 'TOOLS_FILTERED', { tools: toolDefs.map(tool => tool.name) }, { debugFlag: 'DEBUG_TOOLS' })
-        if (searchMode === 'tool' && !toolDefs.some(tool => tool.name === 'builtin.web_search')) {
-            const webSearch = getWebSearchSettings(db)
-            const strategies = getEffectiveStrategies(db)
-            const activeStrategy = strategies.find((s) => s.id === (convRow?.strategy_id ?? '')) ?? strategies[0]
-            const allowlist = activeStrategy?.manifest?.allowlist ?? []
-            const allowsWebSearch = allowlist.length === 0
-                ? true
-                : allowlist.some((rule) => {
-                    if (rule.endsWith('*')) return 'builtin.web_search'.startsWith(rule.slice(0, -1))
-                    return rule === 'builtin.web_search'
-                })
-            const reason = !webSearch.enabled
-                ? 'web_search disabled'
-                : !allowsWebSearch
-                    ? 'allowlist blocked'
-                    : 'tool filtered'
-            const summary = `Search is unavailable because platform web_search is not available (${reason})`
-            const ts = Date.now()
-            turnWriter.finalizeTurn({
-                turnId,
-                assistantMessageId: replyId,
-                status: 'error',
-                finishReason: 'error',
-                finalContent: summary,
-                timestampMs: ts,
-                error: { code: 'SEARCH_TOOL_UNAVAILABLE', message: summary },
-            })
-            const wcId = this.taskRegistry.consumeWebContentsId(replyId)
-            this.taskRegistry.delete(replyId)
-            this.eventPublisher.emitDone({
-                wcId,
-                conversationId,
-                turnId,
-                replyId,
-                reason: 'error',
-                elapsedMs: ts - t0,
-                finalContent: summary,
-                modelId: model.id,
-                providerId: model.provider,
-                traceId,
-                error: { code: 'SEARCH_TOOL_UNAVAILABLE', message: summary },
-            })
-            return
-        }
-        const allowedToolNames = new Set(toolDefs.map(tool => tool.name))
-        const onToolCall = toolDefs.length
-            ? async (call: { id: string; name: string; args?: unknown }) => {
-                streamLog('debug', 'TOOL_CALL_RECEIVED', { name: call.name }, { debugFlag: 'DEBUG_TOOLS' })
-                emitDevEvent({
-                    type: 'tools',
-                    phase: 'turnEnd',
-                    kind: 'tool.call',
-                    data: { action: 'tool.call', input: call },
-                })
-                if (!allowedToolNames.has(call.name)) {
-                    streamLog('warn', 'TOOL_CALL_BLOCKED', { name: call.name })
-                    emitDevEvent({
-                        type: 'tools',
-                        phase: 'turnEnd',
-                        kind: 'tool.error',
-                        data: { action: 'tool.error', input: call, error: 'tool not allowed' },
-                    })
-                    return `Error: tool not allowed (${call.name})`
-                }
-                const startedAt = Date.now()
-                try {
-                    const result = await strategyHost.runToolCall({ conversationId, turnId, messageId: replyId, call })
-                    streamLog('debug', 'TOOL_EXECUTED', {
-                        name: call.name,
-                        ms: Date.now() - startedAt,
-                    }, { debugFlag: 'DEBUG_TOOLS' })
-                    emitDevEvent({
-                        type: 'tools',
-                        phase: 'turnEnd',
-                        kind: 'tool.result',
-                        data: { action: 'tool.result', input: call, output: { length: result.length } },
-                    })
-                    return result
-                } catch (err) {
-                    const msg = err instanceof Error ? err.message : String(err)
-                    streamLog('warn', 'TOOL_FAILED', {
-                        name: call.name,
-                        ms: Date.now() - startedAt,
-                        error: msg,
-                    })
-                    emitDevEvent({
-                        type: 'tools',
-                        phase: 'turnEnd',
-                        kind: 'tool.error',
-                        data: { action: 'tool.error', input: call, error: msg },
-                    })
-                    throw err
-                }
-            }
-            : undefined
+        const toolDefs: ToolDef[] = []
+        const onToolCall = undefined
         log('info', '[TOOLS_FINAL]', {
             traceId,
             conversationId,
@@ -401,13 +285,7 @@ export class StreamManager extends EventEmitter {
         })
 
         const ctxSource = getProviderCtxSource(model.provider)
-        if (searchMode === 'tool') {
-            emitDevEvent({
-                type: 'console',
-                level: 'log',
-                text: '[websearch] force enabled: injected system instruction',
-            })
-        } else if (searchMode === 'native') {
+        if (searchMode === 'native') {
             emitDevEvent({
                 type: 'console',
                 level: 'log',
@@ -434,20 +312,7 @@ export class StreamManager extends EventEmitter {
 
         trace.t_llm_request_start = Date.now()
 
-        const forceInstruction = "本轮必须使用 builtin.web_search 获取实时信息后再回答；如需要网页内容再用 builtin.web_fetch；禁止声称无法联网/无法浏览网页。"
-        const strategyMessages = searchMode === 'tool'
-            ? [
-                {
-                    id: `force_web_${Date.now()}`,
-                    conversation_id: conversationId,
-                    role: 'system',
-                    type: 'text',
-                    content: forceInstruction,
-                    timestamp: Date.now(),
-                } as UIMessage,
-                ...history,
-            ]
-            : history
+        const strategyMessages = history
         let callMessages: UIMessage[] = []
         let payloadSummary!: PayloadSummary
         let hasMessageFileParts = false

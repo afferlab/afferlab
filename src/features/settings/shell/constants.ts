@@ -5,7 +5,6 @@ import {
     Cloud,
     SlidersHorizontal,
     Cpu,
-    Wrench,
     Settings,
     Shield,
 } from "lucide-react"
@@ -14,7 +13,6 @@ export type SettingsCategoryId =
     | "model"
     | "model-settings"
     | "strategy"
-    | "tools"
     | "general"
     | "privacy"
 
@@ -42,7 +40,6 @@ export const CATEGORIES: SettingsNavItem[] = [
     { type: "divider", id: "div-1" },
 
     { type: "item", id: "strategy", label: "Strategy", icon: Cpu, path: "/settings/strategy" },
-    { type: "item", id: "tools", label: "Web Search", icon: Wrench, path: "/settings/web-search-settings" },
 
     // Insert another divider here (no title)
     { type: "divider", id: "div-2"},
