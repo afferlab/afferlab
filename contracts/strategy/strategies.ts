@@ -70,24 +70,91 @@ export type ToolCall = {
 
 export type StrategyConfigType = 'text' | 'number' | 'boolean' | 'select'
 
-export type StrategyConfigOption = {
-    label: string
-    value: string
-}
-
-export type StrategyConfigEntry = {
-    key: string
-    type: StrategyConfigType
-    default: string | number | boolean
+type StrategyConfigEntryBase<TKey extends string> = {
+    key: TKey
     label?: string
     description?: string
+}
+
+export type StrategyConfigOption<TValue extends string = string> = {
+    label: string
+    value: TValue
+}
+
+export type StrategyConfigTextEntry<TKey extends string = string> = StrategyConfigEntryBase<TKey> & {
+    type: 'text'
+    default: string
+}
+
+export type StrategyConfigNumberEntry<TKey extends string = string> = StrategyConfigEntryBase<TKey> & {
+    type: 'number'
+    default: number
     min?: number
     max?: number
     step?: number
-    options?: StrategyConfigOption[]
 }
 
-export type StrategyConfigSchema = StrategyConfigEntry[]
+export type StrategyConfigBooleanEntry<TKey extends string = string> = StrategyConfigEntryBase<TKey> & {
+    type: 'boolean'
+    default: boolean
+}
+
+export type StrategyConfigSelectEntry<TKey extends string = string, TValue extends string = string> = StrategyConfigEntryBase<TKey> & {
+    type: 'select'
+    default: TValue
+    options?: ReadonlyArray<StrategyConfigOption<TValue> | TValue>
+}
+
+export type StrategyConfigEntry<TKey extends string = string> =
+    | StrategyConfigTextEntry<TKey>
+    | StrategyConfigNumberEntry<TKey>
+    | StrategyConfigBooleanEntry<TKey>
+    | StrategyConfigSelectEntry<TKey>
+
+export type StrategyConfigSchema = ReadonlyArray<StrategyConfigEntry>
+
+type SelectOptionValue<TOptions> =
+    TOptions extends ReadonlyArray<infer TOption>
+        ? TOption extends string
+            ? TOption
+            : TOption extends StrategyConfigOption<infer TValue>
+                ? TValue
+                : never
+        : never
+
+type StrategyConfigEntryKey<TEntry> =
+    TEntry extends { key: infer TKey extends string }
+        ? TKey
+        : never
+
+type StrategyConfigEntryOptions<TEntry> =
+    TEntry extends { options?: infer TOptions }
+        ? TOptions
+        : never
+
+export type StrategyConfigValue<TEntry> =
+    TEntry extends { type: 'number' }
+        ? number
+        : TEntry extends { type: 'boolean' }
+            ? boolean
+            : TEntry extends { type: 'text' }
+                ? string
+                : TEntry extends { type: 'select' }
+                    ? [SelectOptionValue<StrategyConfigEntryOptions<TEntry>>] extends [never]
+                        ? TEntry extends { default: infer TValue extends string }
+                            ? TValue
+                            : string
+                        : SelectOptionValue<StrategyConfigEntryOptions<TEntry>>
+                    : TEntry extends { default: infer TValue }
+                        ? TValue
+                        : never
+
+export type StrategyConfigValues<TSchema> =
+    TSchema extends ReadonlyArray<unknown>
+        ? {
+            [TEntry in TSchema[number] as StrategyConfigEntryKey<TEntry>]: StrategyConfigValue<TEntry>
+        }
+        : Record<string, unknown>
 
 export type StrategyMessageRole = Extract<Role, 'user' | 'assistant' | 'system' | 'tool'>
 
@@ -291,11 +358,11 @@ export type ToolsAPI = {
     memory: MemoryAPI
 }
 
-export type LoomaContext = {
+export type LoomaContext<TConfig extends Record<string, unknown> = Record<string, unknown>> = {
     input: Input
     history: HistoryHelper
     message: LoomaMessage | null
-    config: Record<string, unknown>
+    config: Readonly<TConfig>
     budget: Budget
     capabilities: Capabilities
     slots: SlotsAPI
@@ -316,25 +383,25 @@ export type StrategyMeta = {
     icon?: string
 }
 
-export type StrategyHooks = {
-    onInit?: (ctx: LoomaContext) => Promise<void> | void
-    onContextBuild: (ctx: LoomaContext) => Promise<StrategyContextBuildOutput> | StrategyContextBuildOutput
-    onTurnEnd?: (ctx: LoomaContext) => Promise<void> | void
-    onCleanup?: (ctx: LoomaContext) => Promise<void> | void
-    onError?: (ctx: LoomaContext, error: unknown, phase: string) => Promise<void> | void
+export type StrategyHooks<TConfig extends Record<string, unknown> = Record<string, unknown>> = {
+    onInit?: (ctx: LoomaContext<TConfig>) => Promise<void> | void
+    onContextBuild: (ctx: LoomaContext<TConfig>) => Promise<StrategyContextBuildOutput> | StrategyContextBuildOutput
+    onTurnEnd?: (ctx: LoomaContext<TConfig>) => Promise<void> | void
+    onCleanup?: (ctx: LoomaContext<TConfig>) => Promise<void> | void
+    onError?: (ctx: LoomaContext<TConfig>, error: unknown, phase: string) => Promise<void> | void
     onReplayTurn?: (ctx: StrategyReplayTurnInput) => Promise<void> | void
-    onToolCall?: (ctx: LoomaContext, call: unknown) => Promise<string> | string
+    onToolCall?: (ctx: LoomaContext<TConfig>, call: unknown) => Promise<string> | string
 }
 
-export type StrategyModule = {
+export type StrategyModule<TSchema extends StrategyConfigSchema = []> = {
     meta: StrategyMeta
-    configSchema?: StrategyConfigSchema
-    hooks: StrategyHooks
+    configSchema?: TSchema
+    hooks: StrategyHooks<StrategyConfigValues<TSchema>>
 }
 
-export type StrategyDefinition =
-    | StrategyModule
-    | (Omit<StrategyModule, 'hooks'> & StrategyHooks)
+export type StrategyDefinition<TSchema extends StrategyConfigSchema = []> =
+    | StrategyModule<TSchema>
+    | (Omit<StrategyModule<TSchema>, 'hooks'> & StrategyHooks<StrategyConfigValues<TSchema>>)
 
 export type StrategyScope = {
     conversationId: string

@@ -19,9 +19,7 @@ At minimum, a strategy file must export:
 ## Minimal Example
 
 ```ts
-import { defineStrategy } from '../../../contracts'
-
-export const configSchema = []
+import { defineStrategy } from '@looma/strategy-sdk'
 
 export default defineStrategy({
     meta: {
@@ -31,12 +29,25 @@ export default defineStrategy({
         features: { memoryCloud: false },
     },
 
-    configSchema,
+    configSchema: [
+        {
+            key: 'historyDepth',
+            type: 'number',
+            default: 10,
+            min: 1,
+            max: 20,
+        },
+        {
+            key: 'systemPrompt',
+            type: 'text',
+            default: 'You are a helpful assistant.',
+        },
+    ],
 
     onContextBuild(ctx) {
-        const history = ctx.history.recent(10)
+        const history = ctx.history.recent(ctx.config.historyDepth)
 
-        ctx.slots.add('system', 'You are a helpful assistant.', {
+        ctx.slots.add('system', ctx.config.systemPrompt, {
             priority: 3,
         })
 
@@ -48,10 +59,12 @@ export default defineStrategy({
             priority: 2,
         })
 
-        return ctx.slots.render()
+        return {
+            prompt: ctx.slots.render(),
+            tools: [],
+        }
     },
 })
-
 ```
 
 ## Optional Exports
