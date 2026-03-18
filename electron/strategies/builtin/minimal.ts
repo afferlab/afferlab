@@ -6,7 +6,7 @@ export default defineStrategy({
     meta: {
         name: 'Base',
         description: 'Minimal',
-        version: '0.2.2',
+        version: '0.1.0',
         features: { memoryCloud: false },
     },
 
