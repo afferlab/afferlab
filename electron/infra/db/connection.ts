@@ -14,7 +14,7 @@ let db: Database | null = null
 let dbClosing = false
 
 function resolveDbPath(): string {
-    const override = process.env.LOOMA_DB_PATH?.trim() || process.env.SYNARA_DB_PATH?.trim()
+    const override = process.env.AFFERLAB_DB_PATH?.trim() || process.env.SYNARA_DB_PATH?.trim()
     if (override) return path.resolve(override)
     return path.join(app.getPath('userData'), 'chat.db')
 }

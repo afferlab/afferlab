@@ -1,0 +1,42 @@
+---
+title: Web Search
+description: Web search allows AfferLab conversations to access information from the internet.
+---
+
+#
+
+## How It Works
+
+Web search can be enabled for a conversation using the **Web Search icon** below the input area.
+When enabled, AfferLab allows the conversation to retrieve information from the internet.
+AfferLab supports two different ways to perform web search.
+
+## Model Native Search
+
+Some models provide **built-in web search capabilities**.
+In the model select panel, these models display a **web search icon**.
+When such a model is selected, AfferLab will use the model's **native search mode** directly during the conversation.
+
+## AfferLab Web Search Tool
+
+If the selected model does not support native search, AfferLab can perform web search through its **built-in search tools**.
+This requires the model to support **tool usage**.
+In this mode, the model calls AfferLab's search tools to retrieve web results and use them in the response.
+
+When AfferLab performs a tool-based web search, the process follows two steps.
+
+First, AfferLab sends the search query to the search engine and retrieves the top N relevant webpages. The value of N can be configured in Settings → Web Search → Limit, with a default of 5.
+
+After the results are returned, the model selects the webpages it considers relevant and retrieves their content for further reading before generating the final response.
+
+## When Search Is Not Available
+
+If the selected model supports **neither native search nor tool usage**, web search cannot be used in the conversation.
+
+## Search Provider
+
+AfferLab currently performs tool-based searches using a **local Bing browser session**.
+This approach is free to use but may not always guarantee the accuracy of search results.
+
+#
+#

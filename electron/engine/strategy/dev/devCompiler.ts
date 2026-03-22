@@ -29,7 +29,7 @@ export async function compileStrategyFile(filePath: string): Promise<DevBundle> 
             {
                 name: 'strategy-sdk-resolver',
                 setup(buildInstance) {
-                    buildInstance.onResolve({ filter: /^@looma\/strategy-sdk$/ }, () => ({
+                    buildInstance.onResolve({ filter: /^@afferlab\/strategy-sdk$/ }, () => ({
                         path: STRATEGY_SDK_ENTRY,
                     }))
                 },

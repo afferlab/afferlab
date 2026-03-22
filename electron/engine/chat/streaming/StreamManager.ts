@@ -8,6 +8,7 @@ import { getModelById, getProviderConfigForModel, resolveModelConfig } from '../
 import { maybeAutoTitleConversation } from '../../../core/conversation/autoTitle'
 import { emitStrategyDevEvent } from '../../strategy/dev/devEventBus'
 import { shouldRunTurnEndForMode } from '../../../core/flow/turnMode'
+import { StrategyHost } from '../../strategy/host/createStrategyHost'
 import {
     AttachmentCapabilityError,
     summarizeAttachmentError,
@@ -642,6 +643,7 @@ export class StreamManager extends EventEmitter {
         })
         trace.t_db_finalize_done = Date.now()
         if (shouldRunTurnEndForMode(runMode)) {
+            const strategyHost = new StrategyHost(db)
             void strategyHost.runTurnEnd({
                 conversationId,
                 turnId,

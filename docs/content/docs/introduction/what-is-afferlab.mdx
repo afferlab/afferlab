@@ -1,6 +1,6 @@
 ---
-title: What is Looma
-description: Looma is a local-first AI chat client where conversation behavior and context management are programmable.
+title: What is AfferLab
+description: AfferLab is a local-first AI chat client where conversation behavior and context management are programmable.
 ---
 
 #
@@ -10,7 +10,7 @@ description: Looma is a local-first AI chat client where conversation behavior a
 Most AI applications treat conversations as fixed systems.
 You can choose a model, but the application decides how prompts are built, how context is managed, and how tools are used.
 
-Looma takes a different approach.
+AfferLab takes a different approach.
 
 The platform provides the infrastructure — models, storage, and tools — while **strategies define how conversations work**.
 
@@ -29,13 +29,13 @@ This means every AI application must constantly answer questions like:
 
 Most applications hide this logic deep inside the product.
 
-Looma exposes it.
+AfferLab exposes it.
 
 ---
 
 ## Programmable Chat Flow
 
-In Looma, the behavior of a conversation is defined by a **strategy**.
+In AfferLab, the behavior of a conversation is defined by a **strategy**.
 
 A strategy is a small TypeScript module that controls how the system interacts with the model.
 
@@ -54,7 +54,7 @@ Because strategies run inside an isolated engine, they can extend the system wit
 
 ## Local-First by Design
 
-Looma is designed around a **local-first architecture**.
+AfferLab is designed around a **local-first architecture**.
 
 Conversation state, settings, strategies, and memory metadata are stored locally.
 Attachments are also managed through local storage paths and local ingest flows.
@@ -68,7 +68,7 @@ Strategies only focus on defining conversation behavior.
 
 ## System Architecture
 
-Looma is organized into three layers.
+AfferLab is organized into three layers.
 
 **Host Platform**
 

@@ -5,10 +5,10 @@ import { Button } from "@/shared/ui/button"
 import { useChatStore } from "@/features/chat/state/chatStore"
 import RecentConversations from "@/features/home/components/RecentConversations"
 
-const WEBSITE_URL = "https://loomachat.com"
+const WEBSITE_URL = "https://afferlab.com"
 const DOCS_URL = "https://www.google.com"
 
-export default function LoomaHome() {
+export default function AfferLabHome() {
     const createDraftConversation = useChatStore((s) => s.createDraftConversation)
     const navigate = useNavigate()
 
@@ -32,9 +32,9 @@ export default function LoomaHome() {
                 <div className="flex min-h-full items-center justify-center px-6 py-1">
                     <div className="flex w-full max-w-2xl select-none flex-col items-center gap-6 text-center text-tx">
                         <div className="flex items-center gap-4">
-                            <img src="/images/logo_black.svg" alt="Looma" className="h-10 w-10 dark:hidden" />
-                            <img src="/images/logo_white.svg" alt="Looma" className="hidden h-10 w-10 dark:block" />
-                            <h1 className="text-5xl select-none font-semibold">Looma</h1>
+                            <img src="/images/logo_black.svg" alt="AfferLab" className="h-10 w-10 dark:hidden" />
+                            <img src="/images/logo_white.svg" alt="AfferLab" className="hidden h-10 w-10 dark:block" />
+                            <h1 className="text-5xl select-none font-semibold">AfferLab</h1>
                         </div>
 
                         <p className="text-sm select-none text-tx/50">

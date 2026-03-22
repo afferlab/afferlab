@@ -99,7 +99,7 @@ function normalizeStrategyModule(mod: Record<string, unknown>, entryPath: string
 
     return {
         meta: meta as StrategyModule['meta'],
-        configSchema,
+        configSchema: configSchema as any,
         hooks: hooks as StrategyModule['hooks'],
     }
 }

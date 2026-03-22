@@ -1,17 +1,17 @@
 ---
 title: Config Schema
-description: configSchema defines configurable strategy parameters that appear in the Looma strategy UI.
+description: configSchema defines configurable strategy parameters that appear in the AfferLab strategy UI.
 ---
 
 #
 
 ## How It Works
 
-When a strategy is installed, Looma stores the `configSchema` as part of the strategy metadata.
+When a strategy is installed, AfferLab stores the `configSchema` as part of the strategy metadata.
 
 The host uses this schema to automatically generate configuration controls in the strategy settings UI.
 
-The values chosen by the user are persisted by Looma and exposed to the strategy at runtime through `ctx.config`.
+The values chosen by the user are persisted by AfferLab and exposed to the strategy at runtime through `ctx.config`.
 
 ---
 
@@ -44,7 +44,7 @@ These settings allow strategies to adjust behavior without modifying the strateg
 
 `configSchema` should not be used for **model or provider configuration**.
 
-Model settings such as temperature, model selection, or provider credentials belong in Looma's model settings system, not inside strategies.
+Model settings such as temperature, model selection, or provider credentials belong in AfferLab's model settings system, not inside strategies.
 
 #
 #

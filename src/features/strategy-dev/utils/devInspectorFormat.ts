@@ -1,4 +1,4 @@
-import type { Message, StrategyDevEvent, StrategyDevEventPhase, LoomaAttachment } from "@contracts"
+import type { Message, StrategyDevEvent, StrategyDevEventPhase, AfferLabAttachment } from "@contracts"
 import type { DevFilterKey, DevTurnScope } from "@/features/strategy-dev/state/devUiStore"
 
 export type DevStatusData = Extract<StrategyDevEvent, { type: "status" }>["data"]
@@ -82,7 +82,7 @@ type NormalizedEventData = {
     fallbackUsed?: boolean
     source?: "worker" | "host"
     action?: string
-    input?: Record<string, unknown> & { text?: string; attachments?: LoomaAttachment[] }
+    input?: Record<string, unknown> & { text?: string; attachments?: AfferLabAttachment[] }
     output?: unknown
     error?: string
     status?: string
@@ -337,7 +337,7 @@ function summarizeMemory(memoryEvents: NormalizedEvent[]): { count: number; labe
     return { count: memoryEvents.length, label: `${memoryEvents.length} (${shown.join(", ")}${extra})` }
 }
 
-function describeAttachment(attachment: LoomaAttachment): RowField {
+function describeAttachment(attachment: AfferLabAttachment): RowField {
     const details = [`${attachment.modality}`, formatBytes(attachment.size)].filter(Boolean).join(" / ")
     return { label: attachment.name || "attachment", value: details || "-" }
 }

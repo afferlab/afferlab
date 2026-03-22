@@ -120,7 +120,7 @@ const MarkdownRenderer = memo(function MarkdownRenderer({
                     parts.push(
                         <span
                             key={`${range.id}-${overlapStart}`}
-                            className="looma-stream-reveal"
+                            className="afferlab-stream-reveal"
                             data-reveal="1"
                         >
                             {value.slice(relStart, relEnd)}

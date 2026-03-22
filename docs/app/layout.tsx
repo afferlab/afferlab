@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 export default function Layout({ children }: LayoutProps<'/'>) {
   return (
     <html lang="en" className={manrope.variable} suppressHydrationWarning>
-      <body className="flex min-h-screen flex-col pt-[var(--looma-header-height)] font-sans">
+      <body className="flex min-h-screen flex-col pt-[var(--afferlab-header-height)] font-sans">
         <RootProvider>
           <Header />
           {children}

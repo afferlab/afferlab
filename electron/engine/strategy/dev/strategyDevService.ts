@@ -196,8 +196,8 @@ export async function saveStrategyDev(input: StrategyDevSaveRequest): Promise<St
         const now = Date.now()
         const configSchema = cloneValidatedConfigSchema(input.paramsSchema)
         const manifest: StrategyManifest = {
-            paramsSchema: configSchema,
-            configSchema,
+            paramsSchema: configSchema as any,
+            configSchema: configSchema as any,
             dev: {
                 sourcePath: filePath,
                 metaVersion: meta.version,
@@ -287,8 +287,8 @@ export async function reloadStrategyDev(input: StrategyDevReloadRequest): Promis
         const configSchema = cloneValidatedConfigSchema(input.paramsSchema ?? manifest.configSchema ?? manifest.paramsSchema)
         const nextManifest: StrategyManifest = {
             ...manifest,
-            paramsSchema: configSchema,
-            configSchema,
+            paramsSchema: configSchema as any,
+            configSchema: configSchema as any,
             dev: {
                 sourcePath: filePath,
                 metaVersion: meta.version,

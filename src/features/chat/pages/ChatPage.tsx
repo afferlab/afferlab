@@ -15,7 +15,7 @@ export default function ChatPage() {
     const devPanelOpen = useDevUiStore((s) => s.devPanelOpen)
 
     if (!selectedConversationId) {
-        return <Navigate to="/looma" replace />
+        return <Navigate to="/afferlab" replace />
     }
 
     return (

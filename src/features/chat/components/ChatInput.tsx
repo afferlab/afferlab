@@ -178,7 +178,7 @@ export default function ChatInput({ className }: ChatInputProps) {
     useEffect(() => {
         if (typeof window === 'undefined') return
         try {
-            lastStrategyId.current = window.localStorage.getItem('looma:last_strategy_id')
+            lastStrategyId.current = window.localStorage.getItem('afferlab:last_strategy_id')
         } catch {
             lastStrategyId.current = null
         }
@@ -669,7 +669,7 @@ export default function ChatInput({ className }: ChatInputProps) {
             setStrategyPrefs(nextPrefs)
             if (typeof window !== 'undefined') {
                 try {
-                    window.localStorage.setItem('looma:last_strategy_id', strategyId)
+                    window.localStorage.setItem('afferlab:last_strategy_id', strategyId)
                     lastStrategyId.current = strategyId
                 } catch {
                     // ignore
@@ -715,7 +715,7 @@ export default function ChatInput({ className }: ChatInputProps) {
                         lastStrategyId.current = prefs.defaultId
                         if (typeof window !== 'undefined') {
                             try {
-                                window.localStorage.setItem('looma:last_strategy_id', prefs.defaultId)
+                                window.localStorage.setItem('afferlab:last_strategy_id', prefs.defaultId)
                             } catch {
                                 // ignore
                             }

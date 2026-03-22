@@ -166,7 +166,7 @@ export type Attachment = {
     mimeType?: string
 }
 
-export type LoomaAttachment = Attachment
+export type AfferLabAttachment = Attachment
 
 export type Message = {
     role: StrategyMessageRole
@@ -237,7 +237,7 @@ export type Input = {
     attachments: Attachment[]
 }
 
-export type LoomaMessage = {
+export type AfferLabMessage = {
     id: string
     role: 'assistant'
     content: string | null
@@ -358,10 +358,10 @@ export type ToolsAPI = {
     memory: MemoryAPI
 }
 
-export type LoomaContext<TConfig extends Record<string, unknown> = Record<string, unknown>> = {
+export type AfferLabContext<TConfig extends Record<string, unknown> = Record<string, unknown>> = {
     input: Input
     history: HistoryHelper
-    message: LoomaMessage | null
+    message: AfferLabMessage | null
     config: Readonly<TConfig>
     budget: Budget
     capabilities: Capabilities
@@ -384,13 +384,13 @@ export type StrategyMeta = {
 }
 
 export type StrategyHooks<TConfig extends Record<string, unknown> = Record<string, unknown>> = {
-    onInit?: (ctx: LoomaContext<TConfig>) => Promise<void> | void
-    onContextBuild: (ctx: LoomaContext<TConfig>) => Promise<StrategyContextBuildOutput> | StrategyContextBuildOutput
-    onTurnEnd?: (ctx: LoomaContext<TConfig>) => Promise<void> | void
-    onCleanup?: (ctx: LoomaContext<TConfig>) => Promise<void> | void
-    onError?: (ctx: LoomaContext<TConfig>, error: unknown, phase: string) => Promise<void> | void
+    onInit?: (ctx: AfferLabContext<TConfig>) => Promise<void> | void
+    onContextBuild: (ctx: AfferLabContext<TConfig>) => Promise<StrategyContextBuildOutput> | StrategyContextBuildOutput
+    onTurnEnd?: (ctx: AfferLabContext<TConfig>) => Promise<void> | void
+    onCleanup?: (ctx: AfferLabContext<TConfig>) => Promise<void> | void
+    onError?: (ctx: AfferLabContext<TConfig>, error: unknown, phase: string) => Promise<void> | void
     onReplayTurn?: (ctx: StrategyReplayTurnInput) => Promise<void> | void
-    onToolCall?: (ctx: LoomaContext<TConfig>, call: unknown) => Promise<string> | string
+    onToolCall?: (ctx: AfferLabContext<TConfig>, call: unknown) => Promise<string> | string
 }
 
 export type StrategyModule<TSchema extends StrategyConfigSchema = []> = {
@@ -610,11 +610,11 @@ export type StrategyDevEvent =
     | (StrategyDevEventBase & {
         type: 'context'
         data: {
-            input: LoomaContext['input']
-            budget: LoomaContext['budget']
-            capabilities: LoomaContext['capabilities']
-            config: LoomaContext['config']
-            message: LoomaContext['message'] | null
+            input: AfferLabContext['input']
+            budget: AfferLabContext['budget']
+            capabilities: AfferLabContext['capabilities']
+            config: AfferLabContext['config']
+            message: AfferLabContext['message'] | null
             historyPreview?: Array<{ role: string; content: string | null }>
             historySelection?: HistorySelectionDebug
         }
@@ -756,8 +756,8 @@ export interface Strategy {
     meta: { id: string; name: string; version?: string }
     allowedTools?: string[]
     allowedPermissions?: import('../tools').ToolPermissions
-    onContextBuild(ctx: LoomaContext): Promise<StrategyContextBuildOutput>
-    onTurnEnd?(ctx: LoomaContext): Promise<void>
+    onContextBuild(ctx: AfferLabContext): Promise<StrategyContextBuildOutput>
+    onTurnEnd?(ctx: AfferLabContext): Promise<void>
     onReplayTurn?(ctx: StrategyReplayTurnInput): Promise<void>
-    onToolCall?(ctx: LoomaContext, call: unknown): Promise<string>
+    onToolCall?(ctx: AfferLabContext, call: unknown): Promise<string>
 }

@@ -3,7 +3,7 @@ import ThemeProvider from "@/app/providers/ThemeProvider"
 import { Toaster } from "@/shared/ui/sonner"
 import ChatPage from "@/features/chat/pages/ChatPage"
 import SettingsPage from "@/features/settings/shell/SettingsPage"
-import LoomaHome from "@/features/home/pages/LoomaHome"
+import AfferLabHome from "@/features/home/pages/AfferLabHome"
 import ChatShell from "@/features/chat/pages/ChatShell"
 
 // Settings subpages
@@ -23,8 +23,8 @@ export default function App() {
                             {/* Chat */}
                             <Route index element={<ChatPage />} />
 
-                            {/* Looma home */}
-                            <Route path="looma" element={<LoomaHome />} />
+                            {/* AfferLab home */}
+                            <Route path="afferlab" element={<AfferLabHome />} />
                         </Route>
 
                         {/* Settings area + nested routing */}

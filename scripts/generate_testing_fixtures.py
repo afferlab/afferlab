@@ -141,7 +141,7 @@ def make_docx(path: Path) -> None:
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
   <w:body>
     <w:p><w:r><w:t>Sample DOCX Fixture</w:t></w:r></w:p>
-    <w:p><w:r><w:t>This file is used for Looma attachment regression tests.</w:t></w:r></w:p>
+    <w:p><w:r><w:t>This file is used for AfferLab attachment regression tests.</w:t></w:r></w:p>
     <w:p><w:r><w:t>It contains a title and a few paragraphs.</w:t></w:r></w:p>
     <w:sectPr/>
   </w:body>
@@ -279,7 +279,7 @@ def make_jpg(path: Path) -> None:
 def main() -> None:
     FIXTURES.mkdir(parents=True, exist_ok=True)
 
-    build_pdf(FIXTURES / "tiny.pdf", ["Tiny PDF fixture for Looma attachment tests."])
+    build_pdf(FIXTURES / "tiny.pdf", ["Tiny PDF fixture for AfferLab attachment tests."])
     build_pdf(
         FIXTURES / "mixed.pdf",
         [
@@ -298,7 +298,7 @@ def main() -> None:
     )
     write_text(
         FIXTURES / "sample.txt",
-        "Looma attachment regression fixture.\n\nThis is plain text with multiple paragraphs.\n",
+        "AfferLab attachment regression fixture.\n\nThis is plain text with multiple paragraphs.\n",
     )
     write_text(
         FIXTURES / "sample.md",

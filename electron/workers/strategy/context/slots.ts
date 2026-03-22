@@ -1,4 +1,4 @@
-import type { Attachment, Input as StrategyInput, LoomaContext, Message, MessageContentPart, SlotsAddOptions } from '../../../../contracts'
+import type { Attachment, Input as StrategyInput, AfferLabContext, Message, MessageContentPart, SlotsAddOptions } from '../../../../contracts'
 import { messageTextFromParts, parseMessageContentParts } from '../../../../shared/chat/contentParts'
 import { estimateTokens, estimateTokensForMessages } from '../../../core/tokens/tokenizer'
 
@@ -429,7 +429,7 @@ function trimSlotsToBudget(args: {
     }
 }
 
-export function createSlotsApi(config?: SlotsApiConfig): { add: LoomaContext['slots']['add']; render: LoomaContext['slots']['render'] } {
+export function createSlotsApi(config?: SlotsApiConfig): { add: AfferLabContext['slots']['add']; render: AfferLabContext['slots']['render'] } {
     const slots: SlotEntry[] = []
     const estimateMessagesFn = config?.estimateMessages ?? estimateTokensForMessages
 

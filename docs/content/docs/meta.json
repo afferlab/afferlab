@@ -1,9 +1,9 @@
 {
-  "title": "Looma Docs",
+  "title": "AfferLab Docs",
   "pages": [
     "introduction",
     "getting-started",
-    "using-looma",
+    "using-afferlab",
     "strategies",
     "developing-strategies",
     "context-api"

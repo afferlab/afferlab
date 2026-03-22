@@ -96,7 +96,7 @@ function createMockCtx() {
 
     return {
         ctx: {
-            input: { text: 'Hello from Looma', attachments: [] },
+            input: { text: 'Hello from AfferLab', attachments: [] },
             config: {},
             history: {
                 lastUser: () => null,

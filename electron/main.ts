@@ -1,6 +1,6 @@
 import { app, Menu } from 'electron'
 
-app.setName('Looma')
+app.setName('AfferLab')
 
 
 import { fileURLToPath } from 'node:url'
@@ -19,7 +19,7 @@ dotenv.config()
 
 const menu = Menu.buildFromTemplate([
   {
-    label: 'Looma',
+    label: 'AfferLab',
     submenu: [
       { role: 'about' },
       { type: 'separator' },

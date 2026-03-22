@@ -7,7 +7,7 @@ description: The Context API is the strategy-facing runtime object exposed insid
 
 ## Overview
 
-In Looma, strategies run inside isolated worker threads.
+In AfferLab, strategies run inside isolated worker threads.
 
 Inside that worker, the platform provides a single runtime object called `ctx`.
 
@@ -120,7 +120,7 @@ Strategies should never:
 - upload files manually
 - call model provider APIs
 
-These responsibilities are handled by the Looma host runtime.
+These responsibilities are handled by the AfferLab host runtime.
 
 Strategies only describe **how the prompt should be constructed** and **how host-backed APIs should be used**.
 

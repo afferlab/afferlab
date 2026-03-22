@@ -1,7 +1,7 @@
 import type {
     LLMModelConfig,
-    LoomaContext,
-    LoomaMessage,
+    AfferLabContext,
+    AfferLabMessage,
     Budget,
     Capabilities,
     Attachment,
@@ -37,7 +37,7 @@ type BuildContextInput = {
     configValues?: Record<string, unknown>
     budgetValues?: Budget
     capabilityValues?: Capabilities
-    message?: LoomaMessage | null
+    message?: AfferLabMessage | null
     dev?: {
         emit?: (event: Omit<StrategyDevEvent, 'conversationId' | 'strategyId' | 'timestamp'>) => void
     }
@@ -81,7 +81,7 @@ function resolveCapabilities(input: BuildContextInput): Capabilities {
     }
 }
 
-export async function buildContext(input: BuildContextInput): Promise<LoomaContext> {
+export async function buildContext(input: BuildContextInput): Promise<AfferLabContext> {
     const conversationId = input.conversationId
     const turnId = input.turnId ?? ''
     const model = input.model

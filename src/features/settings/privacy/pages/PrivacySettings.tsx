@@ -80,8 +80,8 @@ export default function PrivacySettings() {
                             </div>
                             <div className="mt-1 border-b border-border" />
                             <div className="mt-3 text-sm text-tx/60 leading-relaxed">
-                                Looma stores all conversations, strategies, and settings locally on your device.
-                                Messages are sent directly to the model provider you choose. Looma does not proxy or store them.
+                                AfferLab stores all conversations, strategies, and settings locally on your device.
+                                Messages are sent directly to the model provider you choose. AfferLab does not proxy or store them.
                             </div>
                         </div>
 

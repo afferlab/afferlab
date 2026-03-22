@@ -66,14 +66,14 @@ export function Header() {
           <Link href="/" className="inline-flex h-full shrink-0 items-center gap-2">
             <Image
               src="/logo_black.svg"
-              alt="Looma logo"
+              alt="AfferLab logo"
               width={23}
               height={23}
               className="dark:hidden"
             />
             <Image
               src="/logo_white.svg"
-              alt="Looma logo"
+              alt="AfferLab logo"
               width={23}
               height={23}
               className="hidden dark:block"

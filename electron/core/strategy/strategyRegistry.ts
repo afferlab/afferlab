@@ -34,8 +34,8 @@ const BUILTIN_STRATEGIES: BuiltinStrategySeed[] = [
         capabilities: {},
         default_allowlist: [],
         manifest: {
-            paramsSchema: cloneValidatedConfigSchema(minimalConfigSchema),
-            configSchema: cloneValidatedConfigSchema(minimalConfigSchema),
+            paramsSchema: cloneValidatedConfigSchema(minimalConfigSchema) as any,
+            configSchema: cloneValidatedConfigSchema(minimalConfigSchema) as any,
         },
     },
     {
@@ -49,8 +49,8 @@ const BUILTIN_STRATEGIES: BuiltinStrategySeed[] = [
         capabilities: { supportsMemoryIngest: true },
         default_allowlist: ['memories.*', 'builtin.web_search', 'builtin.web_fetch', 'mcp.*'],
         manifest: {
-            paramsSchema: cloneValidatedConfigSchema(memoryFirstConfigSchema),
-            configSchema: cloneValidatedConfigSchema(memoryFirstConfigSchema),
+            paramsSchema: cloneValidatedConfigSchema(memoryFirstConfigSchema) as any,
+            configSchema: cloneValidatedConfigSchema(memoryFirstConfigSchema) as any,
         },
     },
 ]

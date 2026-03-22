@@ -2,22 +2,22 @@ import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
 
 export const gitConfig = {
   user: 'victor-YT',
-  repo: 'looma',
+  repo: 'afferlab',
   branch: 'main',
 };
 
 export const siteConfig = {
-  name: 'Looma',
-  siteName: 'Looma Docs',
-  title: 'Looma Docs',
+  name: 'AfferLab',
+  siteName: 'AfferLab Docs',
+  title: 'AfferLab Docs',
   description:
-    'Documentation for Looma, a programmable AI client with strategies and long-term memory.',
+    'Documentation for AfferLab, a programmable AI client with strategies and long-term memory.',
   githubUrl: `https://github.com/${gitConfig.user}/${gitConfig.repo}`,
-  mainSiteUrl: 'https://loomachat.com',
+  mainSiteUrl: 'https://afferlab.com',
   docsHref: '/',
 } as const;
 
-export const docsSidebarToggleEvent = 'looma-docs-sidebar-toggle';
+export const docsSidebarToggleEvent = 'afferlab-docs-sidebar-toggle';
 
 export function baseOptions(): BaseLayoutProps {
   return {

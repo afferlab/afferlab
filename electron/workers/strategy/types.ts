@@ -1,5 +1,5 @@
 export type {
-    LoomaContext,
+    AfferLabContext,
     Message,
     StrategyContextBuildResult,
     StrategyDevEvent,

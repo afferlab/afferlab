@@ -1,6 +1,6 @@
 export { defineStrategy } from '../../contracts/strategy'
 export type {
-    LoomaContext,
+    AfferLabContext,
     StrategyContextBuildResult,
     StrategyDefinition,
     StrategyModule,

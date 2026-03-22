@@ -1,19 +1,19 @@
-# Looma
+# AfferLab
 
 > Strategy-driven AI workspace with programmable conversations.
 
-![License](https://img.shields.io/github/license/YOUR_GITHUB_USERNAME/looma)
-![Stars](https://img.shields.io/github/stars/YOUR_GITHUB_USERNAME/looma)
-![Issues](https://img.shields.io/github/issues/YOUR_GITHUB_USERNAME/looma)
-![PRs](https://img.shields.io/github/issues-pr/YOUR_GITHUB_USERNAME/looma)
+![License](https://img.shields.io/github/license/YOUR_GITHUB_USERNAME/afferlab)
+![Stars](https://img.shields.io/github/stars/YOUR_GITHUB_USERNAME/afferlab)
+![Issues](https://img.shields.io/github/issues/YOUR_GITHUB_USERNAME/afferlab)
+![PRs](https://img.shields.io/github/issues-pr/YOUR_GITHUB_USERNAME/afferlab)
 
 ---
 
-## What is Looma
+## What is AfferLab
 
-**Looma** is a local-first AI workspace where conversations are controlled by **programmable strategies**.
+**AfferLab** is a local-first AI workspace where conversations are controlled by **programmable strategies**.
 
-Instead of treating AI as a simple chat interface, Looma introduces a **strategy execution layer** that allows developers to control:
+Instead of treating AI as a simple chat interface, AfferLab introduces a **strategy execution layer** that allows developers to control:
 
 - how context is built
 - how tools are invoked
@@ -21,7 +21,7 @@ Instead of treating AI as a simple chat interface, Looma introduces a **strategy
 - how models are selected
 - how responses are streamed
 
-Looma is designed for **developers who want full control over AI workflows.**
+AfferLab is designed for **developers who want full control over AI workflows.**
 
 ---
 
@@ -41,7 +41,7 @@ Looma is designed for **developers who want full control over AI workflows.**
 
 ## Core Architecture
 
-Looma is built around several core systems:
+AfferLab is built around several core systems:
 
 ```text
 Strategy Engine
@@ -74,7 +74,7 @@ Full architecture documentation:
 
 ## Supported Models
 
-Looma supports multiple AI providers:
+AfferLab supports multiple AI providers:
 
 - OpenAI
 - Google Gemini
@@ -92,7 +92,7 @@ Models are defined through a flexible **models registry system**.
 Clone the repository:
 
 ```bash
-git clone https://github.com/victor-YT/looma
+git clone https://github.com/victor-YT/afferlab
 ```
 
 Install dependencies:
@@ -126,7 +126,7 @@ Key sections include:
 
 ## Project Status
 
-Looma is currently in early development.
+AfferLab is currently in early development.
 
 APIs, database schema, and internal systems may change.
 

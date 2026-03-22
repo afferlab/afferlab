@@ -33,7 +33,7 @@ export default function Sidebar() {
     const location = useLocation()
     const navigate = useNavigate()
     const isChatRoute = location.pathname === "/"
-    const isLoomaActive = location.pathname.startsWith("/looma")
+    const isAfferLabActive = location.pathname.startsWith("/afferlab")
     const isDraftSelected = Boolean(draftConversation?.id && selectedId === draftConversation.id)
 
     useEffect(() => {
@@ -147,21 +147,21 @@ export default function Sidebar() {
 
 
                             <Link
-                                to="/looma"
+                                to="/afferlab"
                                 className={clsx(
                                     "mt-3 select-none w-full",
                                     "flex items-center gap-2",
                                     "h-9 rounded-xl px-3",
                                     "text-sm cursor-pointer text-tx",
-                                    isLoomaActive
+                                    isAfferLabActive
                                         ? "bg-bg-sidebar-button-active"
                                         : "hover:bg-bg-sidebar-button-hover",
                                     "ui-fast ui-press transition-colors"
                                 )}
                             >
-                                <img src="/images/logo_black.svg" alt="Looma" className="h-4 w-4 dark:hidden" />
-                                <img src="/images/logo_white.svg" alt="Looma" className="hidden h-4 w-4 dark:block" />
-                                <span>Looma</span>
+                                <img src="/images/logo_black.svg" alt="AfferLab" className="h-4 w-4 dark:hidden" />
+                                <img src="/images/logo_white.svg" alt="AfferLab" className="hidden h-4 w-4 dark:block" />
+                                <span>AfferLab</span>
                             </Link>
 
                             <button

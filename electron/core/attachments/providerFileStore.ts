@@ -59,7 +59,7 @@ function writeProviderStaging(args: {
     const rawExt = (args.ext ?? path.extname(args.filename ?? '')).replace(/^\./, '')
     const safeExt = rawExt.trim().toLowerCase()
     const fileName = safeExt ? `${assetId}.${safeExt}` : assetId
-    const dir = path.join(os.tmpdir(), 'looma-provider-file-staging')
+    const dir = path.join(os.tmpdir(), 'afferlab-provider-file-staging')
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
     const storageKey = path.join(dir, fileName)
     fs.writeFileSync(storageKey, Buffer.from(args.bytes))

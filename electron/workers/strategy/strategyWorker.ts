@@ -3,8 +3,8 @@ import type {
     LLMModelConfig,
     StrategyReplayTurnInput,
     StrategyScope,
-    LoomaContext,
-    LoomaMessage,
+    AfferLabContext,
+    AfferLabMessage,
     Budget,
     Capabilities,
     Message,
@@ -63,13 +63,13 @@ type StrategyRequestPayload = {
     configValues?: Record<string, unknown>
     budgetValues?: Budget
     capabilityValues?: Capabilities
-    message?: LoomaMessage | null
+    message?: AfferLabMessage | null
     devMode?: boolean
 }
 
 let loadedStrategy: StrategyModule | null = null
 let loadedEntryPath: string | null = null
-let lastCtx: LoomaContext | null = null
+let lastCtx: AfferLabContext | null = null
 let devMode = false
 let devConversationId: string | null = null
 let devStrategyId: string | null = null
@@ -326,7 +326,7 @@ function patchConsole(): void {
     }
 }
 
-function snapshotContext(ctx: LoomaContext): ContextSnapshot {
+function snapshotContext(ctx: AfferLabContext): ContextSnapshot {
     const historyApi = ctx.history as {
         recent?: (n: number) => Array<{ role: string; content: string | null | undefined }>
         peekRecent?: (n: number) => Array<{ role: string; content: string | null | undefined }>

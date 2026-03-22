@@ -1,11 +1,11 @@
 {
-  "name": "looma",
-  "productName": "Looma",
+  "name": "afferlab",
+  "productName": "AfferLab",
   "private": true,
   "version": "0.1.0",
   "build": {
-    "appId": "com.looma.app",
-    "productName": "Looma",
+    "appId": "com.afferlab.app",
+    "productName": "AfferLab",
     "directories": {
       "buildResources": "build"
     },
@@ -29,11 +29,11 @@
     "preview": "vite preview",
     "clean": "rimraf dist-electron",
     "copy-config": "cpx \"electron/config/**/*\" dist-electron/config",
-    "memory:smoke": "pnpm run clean && vite build --mode development && rm -rf .local && mkdir -p .local && LOOMA_DB_PATH=\"$PWD/.local/memory-smoke.db\" electron ./dist-electron/memorySmoke.js",
-    "models:smoke": "pnpm run clean && vite build --mode development && rm -rf .local && mkdir -p .local && LOOMA_DB_PATH=\"$PWD/.local/models-smoke.db\" electron ./dist-electron/modelSmoke.js",
-    "strategy:smoke": "pnpm run clean && vite build --mode development && rm -rf .local && mkdir -p .local && LOOMA_DB_PATH=\"$PWD/.local/strategy-smoke.db\" electron ./dist-electron/strategySwitchSmoke.js",
-    "memory-cloud:smoke": "pnpm run clean && vite build --mode development && rm -rf .local && mkdir -p .local && LOOMA_DB_PATH=\"$PWD/.local/memory-cloud-smoke.db\" electron ./dist-electron/strategyMemoryCloudSmoke.js",
-    "strategy-memory:smoke": "pnpm run clean && vite build --mode development && rm -rf .local && mkdir -p .local && LOOMA_DB_PATH=\"$PWD/.local/strategy-memory-smoke.db\" electron ./dist-electron/strategyMemorySmoke.js",
+    "memory:smoke": "pnpm run clean && vite build --mode development && rm -rf .local && mkdir -p .local && AFFERLAB_DB_PATH=\"$PWD/.local/memory-smoke.db\" electron ./dist-electron/memorySmoke.js",
+    "models:smoke": "pnpm run clean && vite build --mode development && rm -rf .local && mkdir -p .local && AFFERLAB_DB_PATH=\"$PWD/.local/models-smoke.db\" electron ./dist-electron/modelSmoke.js",
+    "strategy:smoke": "pnpm run clean && vite build --mode development && rm -rf .local && mkdir -p .local && AFFERLAB_DB_PATH=\"$PWD/.local/strategy-smoke.db\" electron ./dist-electron/strategySwitchSmoke.js",
+    "memory-cloud:smoke": "pnpm run clean && vite build --mode development && rm -rf .local && mkdir -p .local && AFFERLAB_DB_PATH=\"$PWD/.local/memory-cloud-smoke.db\" electron ./dist-electron/strategyMemoryCloudSmoke.js",
+    "strategy-memory:smoke": "pnpm run clean && vite build --mode development && rm -rf .local && mkdir -p .local && AFFERLAB_DB_PATH=\"$PWD/.local/strategy-memory-smoke.db\" electron ./dist-electron/strategyMemorySmoke.js",
     "attachments:matrix": "npx esbuild scripts/attachment_policy_matrix.ts --bundle --platform=node --format=esm --outfile=/tmp/attachment-policy-matrix.mjs && node /tmp/attachment-policy-matrix.mjs",
     "attachments:compat-report": "mkdir -p .local && npx esbuild scripts/provider_attachment_compatibility_report.ts --bundle --platform=node --format=esm --outfile=.local/provider-attachment-compat-report.mjs && node .local/provider-attachment-compat-report.mjs"
   },

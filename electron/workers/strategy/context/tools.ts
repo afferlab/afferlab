@@ -4,7 +4,7 @@ import type {
     LLMMessage,
     LLMModelConfig,
     LLMTools,
-    LoomaContext,
+    AfferLabContext,
     MemoryAPI,
     ToolChoice,
     ToolDefinition,
@@ -222,7 +222,7 @@ export function createLLMTools(args: ContextToolArgs): LLMTools {
                 emitTools({ action: 'llm.call', input: requestInput, error: msg })
                 throw err
             }
-        }) as LoomaContext['llm']['call'],
+        }) as AfferLabContext['llm']['call'],
         run: async (options: {
             messages: LLMMessage[]
             tools?: ToolDefinition[]
@@ -492,7 +492,7 @@ export function createMemoryApi(args: ContextToolArgs): MemoryAPI {
     }
 }
 
-export function createToolsApi(args: ContextToolArgs): LoomaContext['tools'] {
+export function createToolsApi(args: ContextToolArgs): AfferLabContext['tools'] {
     const llm = createLLMTools(args)
     const state = createStateTools(args)
     const memory = createMemoryApi(args)

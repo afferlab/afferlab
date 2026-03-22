@@ -7,7 +7,7 @@ description: Strategy hooks are invoked by the worker runtime during different p
 
 ## Overview
 
-Strategies in Looma can export a small set of **lifecycle hooks**.
+Strategies in AfferLab can export a small set of **lifecycle hooks**.
 
 These hooks are invoked by the worker runtime at different stages of a conversation, allowing strategies to control prompt construction, handle tool calls, write memory, and perform cleanup.
 
@@ -57,7 +57,7 @@ Replay jobs may occur when a conversation switches strategies or when background
 
 If exported, `onToolCall` allows the strategy to handle a tool call inside the strategy runtime.
 
-If this hook is not exported, Looma falls back to the host's default tool execution path.
+If this hook is not exported, AfferLab falls back to the host's default tool execution path.
 
 ---
 

@@ -1,11 +1,11 @@
-export const STRATEGY_TEMPLATE_FILENAME = 'looma-strategy-template.ts'
+export const STRATEGY_TEMPLATE_FILENAME = 'afferlab-strategy-template.ts'
 
-export const STRATEGY_TEMPLATE_CODE = `import { defineStrategy } from '@looma/strategy-sdk'
+export const STRATEGY_TEMPLATE_CODE = `import { defineStrategy } from '@afferlab/strategy-sdk'
 
 export default defineStrategy({
     meta: {
         name: 'My Strategy',
-        description: 'A custom Looma strategy.',
+        description: 'A custom AfferLab strategy.',
         version: '0.1.0',
     },
 

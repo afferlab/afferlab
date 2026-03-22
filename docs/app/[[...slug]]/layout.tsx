@@ -11,7 +11,7 @@ export default function Layout({ children }: LayoutProps<'/[[...slug]]'>) {
       nav={{ enabled: false }}
       containerProps={{
         style: {
-          ['--fd-banner-height' as string]: 'var(--looma-header-height)',
+          ['--fd-banner-height' as string]: 'var(--afferlab-header-height)',
         },
       }}
     >
