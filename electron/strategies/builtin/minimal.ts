@@ -2,9 +2,9 @@ import { defineStrategy } from '../../../contracts'
 
 const strategy = defineStrategy({
     meta: {
-        name: 'Base',
-        description: 'Minimal',
-        version: '0.1.0',
+        name: 'Default',
+        description: 'Uses recent N conversations context for responses.',
+        version: '0.1',
         features: { memoryCloud: false },
     },
 

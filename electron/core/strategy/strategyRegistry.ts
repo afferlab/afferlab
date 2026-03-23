@@ -5,8 +5,8 @@ import path from 'node:path'
 import type { StrategyManifest, StrategyRecord } from '../../../contracts/index'
 import { getAppSettings, getStrategyPrefs, listStrategyOverrides } from '../settings/settingsStore'
 import { DEFAULT_STRATEGY_ID } from './strategyScope'
-import { configSchema as minimalConfigSchema } from '../../strategies/builtin/minimal'
-import { configSchema as memoryFirstConfigSchema } from '../../strategies/builtin/memory-first'
+import minimalStrategy, { configSchema as minimalConfigSchema } from '../../strategies/builtin/minimal'
+import memoryFirstStrategy, { configSchema as memoryFirstConfigSchema } from '../../strategies/builtin/memory-first'
 import { cloneValidatedConfigSchema } from './configSchema'
 
 type BuiltinStrategySeed = {
@@ -27,8 +27,8 @@ const BUILTIN_STRATEGIES: BuiltinStrategySeed[] = [
         id: 'builtin:minimal',
         key: 'minimal',
         source: 'builtin',
-        name: 'Base',
-        description: 'Minimal',
+        name: minimalStrategy.meta.name,
+        description: minimalStrategy.meta.description,
         entry_path: 'strategies/builtin/minimal.js',
         version: '1',
         capabilities: {},
@@ -42,8 +42,8 @@ const BUILTIN_STRATEGIES: BuiltinStrategySeed[] = [
         id: 'builtin:memory-first',
         key: 'default',
         source: 'builtin',
-        name: 'Cloud',
-        description: 'Minimal',
+        name: memoryFirstStrategy.meta.name,
+        description: memoryFirstStrategy.meta.description,
         entry_path: 'strategies/builtin/memory-first.js',
         version: '1',
         capabilities: { supportsMemoryIngest: true },
@@ -75,6 +75,8 @@ function computeStrategyHash(seed: BuiltinStrategySeed): string {
     const fallback = JSON.stringify({
         id: seed.id,
         key: seed.key,
+        name: seed.name,
+        description: seed.description,
         version: seed.version,
         entry_path: seed.entry_path,
         default_allowlist: seed.default_allowlist,
@@ -86,8 +88,21 @@ function computeStrategyHash(seed: BuiltinStrategySeed): string {
 export function seedBuiltinStrategies(db: Database): void {
     const now = Date.now()
     const existing = db.prepare(`
-        SELECT id, hash, manifest_json FROM strategies
-    `).all() as Array<{ id: string; hash: string; manifest_json?: string | null }>
+        SELECT id, key, name, description, entry_path, version, hash,
+               capabilities_json, default_allowlist_json, manifest_json
+        FROM strategies
+    `).all() as Array<{
+        id: string
+        key: string
+        name: string
+        description: string
+        entry_path: string
+        version: string
+        hash: string
+        capabilities_json?: string | null
+        default_allowlist_json?: string | null
+        manifest_json?: string | null
+    }>
     const existingById = new Map(existing.map(row => [row.id, row]))
 
     const insert = db.prepare(`
@@ -112,8 +127,18 @@ export function seedBuiltinStrategies(db: Database): void {
             const allowlistJson = JSON.stringify(seed.default_allowlist ?? [])
             const manifestJson = JSON.stringify(seed.manifest ?? {})
             if (existingRow) {
-                const manifestChanged = (existingRow.manifest_json ?? '{}') !== manifestJson
-                if (existingRow.hash !== hash || manifestChanged) {
+                const changed = (
+                    existingRow.key !== seed.key
+                    || existingRow.name !== seed.name
+                    || existingRow.description !== seed.description
+                    || existingRow.entry_path !== seed.entry_path
+                    || existingRow.version !== seed.version
+                    || existingRow.hash !== hash
+                    || (existingRow.capabilities_json ?? '{}') !== capabilitiesJson
+                    || (existingRow.default_allowlist_json ?? '[]') !== allowlistJson
+                    || (existingRow.manifest_json ?? '{}') !== manifestJson
+                )
+                if (changed) {
                     update.run(
                         seed.key,
                         seed.source,

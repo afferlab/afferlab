@@ -6,7 +6,7 @@ export default defineStrategy({
     meta: {
         name: 'Cloud',
         description: 'Persistent memory-enabled assistant',
-        version: '0.1.0',
+        version: '0.1',
         features: { memoryCloud: true },
     },
 

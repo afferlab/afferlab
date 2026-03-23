@@ -6,7 +6,7 @@ import { useChatStore } from "@/features/chat/state/chatStore"
 import RecentConversations from "@/features/home/components/RecentConversations"
 
 const WEBSITE_URL = "https://afferlab.com"
-const DOCS_URL = "https://www.google.com"
+const DOCS_URL = "https://docs.afferlab.com"
 
 export default function AfferLabHome() {
     const createDraftConversation = useChatStore((s) => s.createDraftConversation)
@@ -34,7 +34,7 @@ export default function AfferLabHome() {
                         <div className="flex items-center gap-4">
                             <img src="/images/logo_black.svg" alt="AfferLab" className="h-10 w-10 dark:hidden" />
                             <img src="/images/logo_white.svg" alt="AfferLab" className="hidden h-10 w-10 dark:block" />
-                            <h1 className="text-5xl select-none font-semibold">AfferLab</h1>
+                            <h1 className="text-[44px] select-none font-semibold">AfferLab</h1>
                         </div>
 
                         <p className="text-sm select-none text-tx/50">
