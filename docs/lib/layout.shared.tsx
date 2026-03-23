@@ -11,7 +11,7 @@ export const siteConfig = {
   siteName: 'AfferLab Docs',
   title: 'AfferLab Docs',
   description:
-    'Documentation for AfferLab, a programmable AI client with strategies and long-term memory.',
+    'Documentation for AfferLab, a strategy-programmable AI client.',
   githubUrl: `https://github.com/${gitConfig.user}/${gitConfig.repo}`,
   mainSiteUrl: 'https://afferlab.com',
   docsHref: '/',
