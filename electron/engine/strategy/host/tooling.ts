@@ -1,5 +1,17 @@
 import type { Database } from 'better-sqlite3'
-import type { Attachment, LLMMessage, MessageContentPart, RuntimeMessage, ToolCall, ToolChoice, ToolDef, ToolDefinition, UIMessage, RunResult } from '../../../../contracts/index'
+import type {
+    AttachmentReference,
+    LLMMessage,
+    MessageContentPart,
+    RuntimeMessage,
+    StrategyAttachment,
+    ToolCall,
+    ToolChoice,
+    ToolDef,
+    ToolDefinition,
+    UIMessage,
+    RunResult,
+} from '../../../../contracts/index'
 import { createToolRegistry } from '../../../core/tools'
 import type { LLMStreamResult } from '../../llm/llmRunner'
 import { parseMessageContentParts } from '../../../../shared/chat/contentParts'
@@ -38,11 +50,29 @@ export function normalizeToolCalls(calls: unknown): Array<{ id: string; name: st
     return out
 }
 
-function attachmentHintText(attachment: Attachment): string {
+function isAttachmentReference(attachment: StrategyAttachment): attachment is AttachmentReference {
+    return 'assetId' in attachment && !('id' in attachment)
+}
+
+function attachmentHintText(attachment: StrategyAttachment): string {
+    if (isAttachmentReference(attachment)) {
+        return `File: ${attachment.assetId}`
+    }
     return `File: ${attachment.name}`
 }
 
-function toAttachmentPart(attachment: Attachment): MessageContentPart {
+function toAttachmentPart(attachment: StrategyAttachment): MessageContentPart {
+    if (isAttachmentReference(attachment)) {
+        const assetId = attachment.assetId.trim()
+        return {
+            type: 'file',
+            assetId,
+            assetRef: true,
+            name: assetId,
+            mimeType: 'application/octet-stream',
+            size: 0,
+        }
+    }
     return {
         type: attachment.modality === 'image' ? 'image' : 'file',
         assetId: attachment.id,

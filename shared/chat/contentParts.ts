@@ -12,6 +12,8 @@ export type MessageTextPart = {
 export type MessageFilePart = {
     type: 'file' | 'image'
     assetId: string
+    // runtime-only flag for asset-id placeholders created before full attachment hydration
+    assetRef?: boolean
     // runtime-only provider native file reference (never persisted)
     providerFileId?: string
     storageKey?: string
@@ -105,6 +107,7 @@ function normalizeFilePart(value: unknown): MessageFilePart | null {
     const providerFileId = typeof rec.providerFileId === 'string' && rec.providerFileId.trim()
         ? rec.providerFileId.trim()
         : undefined
+    const assetRef = rec.assetRef === true
     const size = toNumber(rec.size) ?? 0
     const status = rec.status === 'uploading' || rec.status === 'ready' || rec.status === 'error'
         ? rec.status
@@ -143,6 +146,7 @@ function normalizeFilePart(value: unknown): MessageFilePart | null {
     return {
         type,
         assetId: rec.assetId.trim(),
+        assetRef,
         providerFileId,
         storageKey,
         name,
@@ -202,6 +206,7 @@ export function serializeMessageContentParts(parts: MessageContentPart[] | undef
         return {
             type: part.type,
             assetId: part.assetId,
+            assetRef: part.assetRef,
             storageKey: part.storageKey,
             name: part.name,
             mimeType: part.mimeType,

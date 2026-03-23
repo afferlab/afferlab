@@ -1,8 +1,8 @@
-import type { Attachment, Message, RuntimeMessage } from '../../../../contracts'
+import type { Message, RuntimeMessage, StrategyAttachment } from '../../../../contracts'
 import { estimateMessageTokens } from '../../../core/attachments/attachmentTokenEstimator'
 
 type HistoryRuntimeMessage = RuntimeMessage & {
-    attachments?: Attachment[]
+    attachments?: StrategyAttachment[]
     parts?: unknown
 }
 
@@ -16,8 +16,14 @@ function toPublicMessage(message: HistoryRuntimeMessage): Message {
     }
 }
 
-function attachmentHintText(attachment: Attachment): string {
-    return `File: ${attachment.name}`
+function attachmentHintText(attachment: StrategyAttachment): string {
+    if ('assetId' in attachment && !('id' in attachment)) {
+        return `File: ${attachment.assetId}`
+    }
+    if ('name' in attachment && typeof attachment.name === 'string') {
+        return `File: ${attachment.name}`
+    }
+    return 'File: attachment'
 }
 
 function formatRecentText(messages: HistoryRuntimeMessage[]): string {

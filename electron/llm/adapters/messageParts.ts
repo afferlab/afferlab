@@ -1,4 +1,10 @@
-import type { Attachment, MessageContentPart, TurnAttachment, UIMessage } from '../../../contracts/index'
+import type {
+    AttachmentReference,
+    MessageContentPart,
+    StrategyAttachment,
+    TurnAttachment,
+    UIMessage,
+} from '../../../contracts/index'
 import { messageTextFromParts, parseMessageContentParts } from '../../../shared/chat/contentParts'
 
 export function toLegacyAttachmentPart(attachment: TurnAttachment): MessageContentPart {
@@ -17,7 +23,22 @@ export function toLegacyAttachmentPart(attachment: TurnAttachment): MessageConte
     }
 }
 
-function toStrategyAttachmentPart(attachment: Attachment): MessageContentPart {
+function isAttachmentReference(attachment: StrategyAttachment): attachment is AttachmentReference {
+    return 'assetId' in attachment && !('id' in attachment)
+}
+
+function toStrategyAttachmentPart(attachment: StrategyAttachment): MessageContentPart {
+    if (isAttachmentReference(attachment)) {
+        const assetId = attachment.assetId.trim()
+        return {
+            type: 'file',
+            assetId,
+            assetRef: true,
+            name: assetId,
+            mimeType: 'application/octet-stream',
+            size: 0,
+        }
+    }
     const mimeType = attachment.mimeType || 'application/octet-stream'
     return {
         type: attachment.modality === 'image' ? 'image' : 'file',
@@ -28,13 +49,16 @@ function toStrategyAttachmentPart(attachment: Attachment): MessageContentPart {
     }
 }
 
-function attachmentHintText(attachment: { name?: string }): string {
+function attachmentHintText(attachment: StrategyAttachment): string {
+    if (isAttachmentReference(attachment)) {
+        return `File: ${attachment.assetId || 'attachment'}`
+    }
     return `File: ${attachment.name || 'attachment'}`
 }
 
 export function normalizeMessage(message: UIMessage): UIMessage {
     const base = typeof message.content === 'string' ? message.content : ''
-    const withLegacy = message as UIMessage & { contentParts?: unknown; parts?: unknown; attachments?: Attachment[] }
+    const withLegacy = message as UIMessage & { contentParts?: unknown; parts?: unknown; attachments?: StrategyAttachment[] }
     if (withLegacy.contentParts != null) {
         const normalized = parseMessageContentParts(withLegacy.contentParts, base)
         return normalized.length > 0

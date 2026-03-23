@@ -1,10 +1,20 @@
-import type { Attachment, Input as StrategyInput, AfferLabContext, Message, MessageContentPart, SlotsAddOptions } from '../../../../contracts'
+import type {
+    AttachmentReference,
+    Input as StrategyInput,
+    AfferLabContext,
+    Message,
+    MessageContentPart,
+    SlotsAddOptions,
+    StrategyAttachment,
+} from '../../../../contracts'
 import { messageTextFromParts, parseMessageContentParts } from '../../../../shared/chat/contentParts'
 import { estimateTokens, estimateTokensForMessages } from '../../../core/tokens/tokenizer'
 
 type SlotMessage = Message & {
     parts?: MessageContentPart[]
 }
+
+type SlotAttachment = StrategyAttachment
 
 type SlotEntry = {
     name: string
@@ -42,7 +52,36 @@ function normalizeMessages(messages: SlotMessage[], role?: Message['role']): Slo
     })
 }
 
-function toAttachmentPart(attachment: Attachment): MessageContentPart {
+function isAttachmentReference(attachment: SlotAttachment): attachment is AttachmentReference {
+    return 'assetId' in attachment && !('id' in attachment)
+}
+
+function isSlotAttachment(value: unknown): value is SlotAttachment {
+    if (!value || typeof value !== 'object') return false
+    if ('assetId' in (value as Record<string, unknown>)) {
+        return typeof (value as { assetId?: unknown }).assetId === 'string'
+    }
+    return typeof (value as { id?: unknown }).id === 'string'
+        && typeof (value as { name?: unknown }).name === 'string'
+        && typeof (value as { size?: unknown }).size === 'number'
+}
+
+function isSlotAttachmentArray(value: unknown): value is SlotAttachment[] {
+    return Array.isArray(value) && value.every(isSlotAttachment)
+}
+
+function toAttachmentPart(attachment: SlotAttachment): MessageContentPart {
+    if (isAttachmentReference(attachment)) {
+        const assetId = attachment.assetId.trim()
+        return {
+            type: 'file',
+            assetId,
+            assetRef: true,
+            name: assetId,
+            mimeType: 'application/octet-stream',
+            size: 0,
+        }
+    }
     return {
         type: attachment.modality === 'image' ? 'image' : 'file',
         assetId: attachment.id,
@@ -52,11 +91,14 @@ function toAttachmentPart(attachment: Attachment): MessageContentPart {
     }
 }
 
-function attachmentHintText(attachment: Attachment): string {
+function attachmentHintText(attachment: SlotAttachment): string {
+    if (isAttachmentReference(attachment)) {
+        return `File: ${attachment.assetId}`
+    }
     return `File: ${attachment.name}`
 }
 
-function buildMessageParts(text: string | null | undefined, attachments: Attachment[] | undefined): MessageContentPart[] {
+function buildMessageParts(text: string | null | undefined, attachments: SlotAttachment[] | undefined): MessageContentPart[] {
     const parts: MessageContentPart[] = []
     if (typeof text === 'string' && text.trim().length > 0) {
         parts.push({ type: 'text', text })
@@ -75,6 +117,21 @@ function isStrategyInput(value: unknown): value is StrategyInput {
         && typeof (value as { text?: unknown }).text === 'string'
         && Array.isArray((value as { attachments?: unknown }).attachments)
     )
+}
+
+function toAttachmentMessage(
+    name: string,
+    attachments: SlotAttachment[],
+    role?: Message['role'],
+): SlotMessage {
+    const resolvedRole = role ?? (name === 'system' ? 'system' : 'user')
+    const parts = buildMessageParts(null, attachments)
+    return {
+        role: resolvedRole,
+        content: null,
+        attachments,
+        ...(parts.length > 0 ? { parts } : {}),
+    }
 }
 
 function toInputMessage(name: string, input: StrategyInput, role?: Message['role']): SlotMessage {
@@ -105,10 +162,20 @@ function normalizeMessage(message: SlotMessage): SlotMessage {
     }
 }
 
-function normalizeSlotContent(name: string, content: string | StrategyInput | Message | Message[] | null, role?: Message['role']): SlotMessage[] {
+function normalizeSlotContent(
+    name: string,
+    content: string | StrategyInput | Message | Message[] | SlotAttachment | SlotAttachment[] | null,
+    role?: Message['role'],
+): SlotMessage[] {
     if (content == null) return []
     if (isStrategyInput(content)) {
         return [toInputMessage(name, content, role)]
+    }
+    if (isSlotAttachment(content)) {
+        return [toAttachmentMessage(name, [content], role)]
+    }
+    if (isSlotAttachmentArray(content)) {
+        return [toAttachmentMessage(name, content, role)]
     }
     if (typeof content === 'string') {
         const resolvedRole = role ?? (name === 'system' ? 'system' : 'user')

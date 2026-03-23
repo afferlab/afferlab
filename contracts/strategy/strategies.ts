@@ -167,24 +167,28 @@ export type Attachment = {
 }
 
 export type AfferLabAttachment = Attachment
+export type AttachmentReference = {
+    assetId: string
+}
+export type StrategyAttachment = Attachment | AttachmentReference
 
 export type Message = {
     role: StrategyMessageRole
     content: string | null
-    attachments?: Attachment[]
+    attachments?: StrategyAttachment[]
 }
 
 export type MeasureInput =
     | string
     | Message
     | Message[]
-    | Attachment
-    | Attachment[]
+    | StrategyAttachment
+    | StrategyAttachment[]
 
 export type LLMMessage = Message | {
     role: 'assistant'
     content: string | null
-    attachments?: Attachment[]
+    attachments?: StrategyAttachment[]
     tool_calls?: ToolCall[]
     name?: string
 } | {
@@ -195,7 +199,7 @@ export type LLMMessage = Message | {
 }
 
 export type RuntimeMessage = LLMMessage & {
-    attachments?: Attachment[]
+    attachments?: StrategyAttachment[]
     tool_calls?: ToolCall[]
     tool_call_id?: string
     name?: string
@@ -234,7 +238,7 @@ export type RunResult = {
 
 export type Input = {
     text: string
-    attachments: Attachment[]
+    attachments: StrategyAttachment[]
 }
 
 export type AfferLabMessage = {
@@ -288,7 +292,11 @@ export type SlotsAddOptions = {
 }
 
 export type SlotsAPI = {
-    add(name: string, content: string | Message | Message[] | Input | null, options?: SlotsAddOptions): void
+    add(
+        name: string,
+        content: string | Message | Message[] | Input | StrategyAttachment | StrategyAttachment[] | null,
+        options?: SlotsAddOptions,
+    ): void
     render(): { messages: Message[] }
 }
 

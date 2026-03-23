@@ -1,72 +1,82 @@
 import { defineStrategy } from '../../../contracts'
 
-export const configSchema = []
-
-export default defineStrategy({
+const strategy = defineStrategy({
     meta: {
         name: 'Cloud',
-        description: 'Persistent memory-enabled assistant',
+        description: 'Uses Memory Cloud assets as attachments',
         version: '0.1',
         features: { memoryCloud: true },
     },
 
-    configSchema,
+    configSchema: [
+        {
+            key: 'historyDepth',
+            type: 'number',
+            default: 10,
+            min: 1,
+            max: 20,
+        },
+        {
+            key: 'systemPrompt',
+            type: 'text',
+            default: 'You are a helpful assistant.',
+        },
+        {
+            key: 'memoryLimit',
+            type: 'number',
+            default: 10,
+            min: 1,
+            max: 50,
+        },
+    ],
 
     async onContextBuild(ctx) {
-        const history = ctx.history.recent(10)
+        const history = ctx.history.recent(ctx.config.historyDepth)
 
-        // 1. load memory (best-effort)
         const items = await ctx.memory.query({
             orderBy: 'updatedAt',
-            limit: 10,
+            limit: ctx.config.memoryLimit,
         })
 
-        const memoryBlocks: string[] = []
+        const seen = new Set<string>()
+        const attachments: { assetId: string }[] = []
 
         for (const item of items) {
             if (!item.assetId) continue
+            if (seen.has(item.assetId)) continue
 
-            try {
-                const content = await ctx.memory.readAsset(item.assetId, {
-                    maxChars: 3000,
-                })
-
-                if (content) {
-                    memoryBlocks.push(content)
-                }
-            } catch {
-                continue
-            }
+            seen.add(item.assetId)
+            attachments.push({ assetId: item.assetId })
         }
 
-        // 2. system (stable)
-        ctx.slots.add('system', 'You are a helpful assistant.', {
+        ctx.slots.add('system', ctx.config.systemPrompt, {
             priority: 3,
             position: 0,
         })
 
-        // 3. memory (degradable)
-        if (memoryBlocks.length > 0) {
+        if (attachments.length > 0) {
             ctx.slots.add(
-                'memory',
-                'The following is long-term memory from the user:\n\n' +
-                memoryBlocks.join('\n\n'),
+                'history',
+                [
+                    {
+                        role: 'user',
+                        content: '',
+                        attachments,
+                    },
+                ],
                 {
                     priority: 2,
                     position: 1,
-                    trimBehavior: 'char',
                 }
             )
         }
 
-        // 4. history
         ctx.slots.add('history', history, {
             priority: 1,
             position: 2,
             trimBehavior: 'message',
         })
 
-        // 5. input
         ctx.slots.add('input', ctx.input, {
             priority: 2,
             position: 3,
@@ -75,31 +85,22 @@ export default defineStrategy({
         return ctx.slots.render()
     },
 
-    async onTurnEnd(ctx) {
-        // best-effort write, NEVER break flow
+    async onCloudAdd(ctx, { assetId }) {
         try {
-            const lastUser = ctx.history.lastUser?.()
-            const lastAssistant = ctx.history.lastAssistant?.()
-
-            if (!lastUser || !lastAssistant) return
-
-            // very simple heuristic: skip very short / low-signal content
-            const userText = lastUser.content?.trim?.() || ''
-            const assistantText = lastAssistant.content?.trim?.() || ''
-
-            if (userText.length < 10 && assistantText.length < 10) return
-
-            const memoryText =
-                `User: ${userText}\n` +
-                `Assistant: ${assistantText}`
-
-            await ctx.memory.ingest(memoryText, {
-                tags: ['conversation'],
-                mode: 'raw',   // no chunk / no embedding
-                wait: 'load',  // do not block
+            await ctx.memory.ingest({ assetId }, {
+                mode: 'raw',
+                wait: 'load',
             })
-        } catch {
-            // swallow all errors
-        }
+        } catch {}
+    },
+
+    async onCloudRemove(ctx, { assetId }) {
+        try {
+            await ctx.memory.removeMemory(assetId)
+        } catch {}
     },
 })
+
+export const configSchema = strategy.configSchema
+
+export default strategy

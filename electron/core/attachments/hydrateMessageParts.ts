@@ -28,6 +28,7 @@ type ParsedAssetMeta = {
 }
 
 type AssetHydrateInfo = {
+    type?: 'file' | 'image'
     name?: string
     mimeType?: string
     size?: number
@@ -62,6 +63,12 @@ function logReplayHydrate(assetId: string, storageKey: string | undefined, bytes
         storageKey: storageKey ?? null,
         bytesLength,
     }, { debugFlag: 'DEBUG_ATTACHMENTS' })
+}
+
+function resolvePartType(mimeType?: string | null): 'file' | 'image' {
+    return typeof mimeType === 'string' && mimeType.trim().toLowerCase().startsWith('image/')
+        ? 'image'
+        : 'file'
 }
 
 function readHydrateStorage(storageKey: string): Uint8Array {
@@ -116,6 +123,7 @@ function loadAsset(
         ? row.uri.trim()
         : undefined
     const info: AssetHydrateInfo = {
+        type: resolvePartType(row.mime_type),
         name: row.filename ?? parsedMeta.filename ?? parsedMeta.name,
         mimeType: row.mime_type ?? undefined,
         size: typeof row.size_bytes === 'number' ? row.size_bytes : undefined,
@@ -242,6 +250,7 @@ function hydrateParts(
         if (!cached) return directResolved.part
         const merged = {
             ...part,
+            type: cached.type ?? part.type,
             name: cached.name ?? part.name,
             mimeType: cached.mimeType ?? part.mimeType,
             size: cached.size ?? part.size,
@@ -276,6 +285,44 @@ function hydrateParts(
     })
 }
 
+function isExplicitAttachmentHint(part: MessageContentPart | undefined, name: string): boolean {
+    return Boolean(part && part.type === 'text' && part.text.trim() === `File: ${name}`)
+}
+
+function shouldDropHydratedAssetRef(part: Extract<MessageContentPart, { type: 'file' | 'image' }>): boolean {
+    if (part.assetRef !== true) return false
+    if (typeof part.providerFileId === 'string' && part.providerFileId.trim().length > 0) return false
+    if (typeof part.storageKey === 'string' && part.storageKey.trim().length > 0) return false
+    return (part.data?.byteLength ?? 0) <= 0
+}
+
+function pruneUnresolvedAssetRefs(args: {
+    conversationId: string
+    messageId?: string
+    parts: MessageContentPart[]
+}): MessageContentPart[] {
+    const kept: MessageContentPart[] = []
+    for (const part of args.parts) {
+        if (part.type === 'text') {
+            kept.push(part)
+            continue
+        }
+        if (!shouldDropHydratedAssetRef(part)) {
+            kept.push(part)
+            continue
+        }
+        if (isExplicitAttachmentHint(kept[kept.length - 1], part.name)) {
+            kept.pop()
+        }
+        logHydrateIssue('asset ref dropped after hydrate miss', {
+            conversationId: args.conversationId,
+            messageId: args.messageId ?? null,
+            assetId: part.assetId,
+        })
+    }
+    return kept
+}
+
 export function hydrateMessagePartsWithAssetData(args: {
     db: Database
     conversationId: string
@@ -287,10 +334,15 @@ export function hydrateMessagePartsWithAssetData(args: {
         const parts = parseMessageContentParts(normalized.contentParts, normalized.content)
         if (parts.length === 0) return normalized
         const hydrated = hydrateParts(args.db, args.conversationId, parts, cache)
+        const filtered = pruneUnresolvedAssetRefs({
+            conversationId: args.conversationId,
+            messageId: normalized.id,
+            parts: hydrated,
+        })
         return {
             ...normalized,
-            content: messageTextFromParts(hydrated, normalized.content),
-            contentParts: hydrated,
+            content: messageTextFromParts(filtered, normalized.content),
+            contentParts: filtered,
         }
     })
 }

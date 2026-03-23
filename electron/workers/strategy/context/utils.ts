@@ -1,4 +1,4 @@
-import type { Attachment, MeasureInput, Message } from '../../../../contracts'
+import type { AttachmentReference, MeasureInput, Message } from '../../../../contracts'
 
 const TEXT_CHARS_PER_UNIT = 4
 const DOCUMENT_BASE_COST = 24
@@ -17,28 +17,24 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 type AttachmentLike = {
-    id: string
-    name: string
-    size: number
+    id?: string
+    assetId?: string
+    name?: string
+    size?: number
     modality?: unknown
 }
 
 function isAttachmentLike(value: unknown): value is AttachmentLike {
     if (!isRecord(value)) return false
+    if (typeof value.assetId === 'string') return true
     return typeof value.id === 'string'
         && typeof value.name === 'string'
         && typeof value.size === 'number'
         && Number.isFinite(value.size)
 }
 
-function toAttachment(input: AttachmentLike): Attachment | (Omit<Attachment, 'modality'> & { modality: string }) {
-    const modality = input.modality
-    return {
-        id: input.id,
-        name: input.name,
-        size: input.size,
-        modality: typeof modality === 'string' ? modality : 'unknown',
-    } as Attachment | (Omit<Attachment, 'modality'> & { modality: string })
+function isAttachmentReference(input: AttachmentLike): input is AttachmentReference {
+    return typeof input.assetId === 'string' && typeof input.id !== 'string'
 }
 
 function isAttachmentArray(value: unknown): value is AttachmentLike[] {
@@ -62,8 +58,11 @@ function estimateTextCost(text: string | null | undefined): number {
     return Math.max(1, Math.ceil(normalized.length / TEXT_CHARS_PER_UNIT))
 }
 
-function estimateAttachmentCost(attachment: Attachment | (Omit<Attachment, 'modality'> & { modality: string })): number {
-    const size = Number.isFinite(attachment.size) && attachment.size > 0 ? attachment.size : 0
+function estimateAttachmentCost(attachment: AttachmentLike): number {
+    if (isAttachmentReference(attachment)) {
+        return UNKNOWN_ATTACHMENT_BASE_COST
+    }
+    const size = Number.isFinite(attachment.size) && (attachment.size as number) > 0 ? (attachment.size as number) : 0
     switch (attachment.modality) {
         case 'document':
             return DOCUMENT_BASE_COST + Math.ceil(size / DOCUMENT_BYTES_PER_UNIT)
@@ -89,7 +88,7 @@ export function estimateMeasureInput(input: unknown): number {
         return input.reduce((sum, item) => sum + estimateMeasureInput(item), 0)
     }
     if (isAttachmentLike(input)) {
-        return estimateAttachmentCost(toAttachment(input))
+        return estimateAttachmentCost(input)
     }
     if (isMessage(input)) {
         return estimateMessageCost(input)

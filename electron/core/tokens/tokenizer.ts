@@ -13,7 +13,7 @@ type TokenizableMessage = {
     content?: string | null
     parts?: unknown
     contentParts?: unknown
-    attachments?: Array<{ name?: string }>
+    attachments?: Array<{ name?: string; assetId?: string }>
 }
 
 const DEFAULT_NON_TEXT_ATTACHMENT_TOKENS = Number(process.env.ATTACHMENT_NON_TEXT_TOKEN_BUDGET ?? 1200)
@@ -66,7 +66,7 @@ export function messagePlainTextWithAttachmentPlaceholders(message: TokenizableM
     if (parts.length === 0) {
         const attachments = Array.isArray(message.attachments) ? message.attachments : []
         if (attachments.length === 0) return fallback
-        const lines = [fallback, ...attachments.map((attachment) => `File: ${attachment.name ?? 'attachment'}`)]
+        const lines = [fallback, ...attachments.map((attachment) => `File: ${attachment.name ?? attachment.assetId ?? 'attachment'}`)]
             .filter((line) => typeof line === 'string' && line.trim().length > 0)
         return lines.join('\n')
     }

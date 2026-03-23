@@ -8,6 +8,8 @@ export type MessageTextPart = {
 export type MessageFilePart = {
     type: 'file' | 'image'
     assetId: string
+    // runtime-only flag for asset-id placeholders created before full attachment hydration
+    assetRef?: boolean
     // runtime-only provider native file reference (never persisted)
     providerFileId?: string
     storageKey?: string
