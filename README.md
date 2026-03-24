@@ -10,15 +10,9 @@
 
 <p align="center">
   <img src="https://img.shields.io/github/license/afferlab/afferlab?style=for-the-badge" alt="License"/>
-  &nbsp; <a href="https://x.com/afferlab">
-    <img src="https://img.shields.io/badge/X-Follow-black?style=for-the-badge&logo=twitter" alt="X"/>
-  </a>
-  &nbsp; <a href="https://www.reddit.com/user/AfferLab/">
-    <img src="https://img.shields.io/badge/Reddit-Profile-FF4500?style=for-the-badge&logo=reddit&logoColor=white" alt="Reddit"/>
-  </a>
-  &nbsp; <a href="https://www.afferlab.com">
-    <img src="https://img.shields.io/badge/Website-Visit-white?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Website"/>
-  </a>
+  <a href="https://x.com/afferlab"><img src="https://img.shields.io/badge/X-Follow-black?style=for-the-badge&logo=twitter" alt="X"/></a>
+  <a href="https://www.reddit.com/user/AfferLab/"><img src="https://img.shields.io/badge/Reddit-Profile-FF4500?style=for-the-badge&logo=reddit&logoColor=white" alt="Reddit"/></a>
+  <a href="https://www.afferlab.com"><img src="https://img.shields.io/badge/Website-Visit-white?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Website"/></a>
 </p>
 
 <p align="center">
