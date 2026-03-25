@@ -15,4 +15,12 @@ module.exports = {
       { allowConstantExport: true },
     ],
   },
+  overrides: [
+    {
+      files: ['docs/app/**/*.{ts,tsx}'],
+      rules: {
+        'react-refresh/only-export-components': 'off',
+      },
+    },
+  ],
 }
