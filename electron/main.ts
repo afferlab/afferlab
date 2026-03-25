@@ -16,7 +16,10 @@ import { registerRuntime } from './app/bootstrap/registerRuntime'
 import { applyNativeTheme, isThemeSource, registerThemeIPC } from './app/theme/nativeTheme'
 import { registerStrategies } from './strategies'
 import { IPC } from './ipc/channels'
-import type { UpdateReadyPayload } from '../contracts/ipc/updaterAPI'
+import type {
+  UpdateReadyPayload,
+  UpdaterStatusSnapshot,
+} from '../contracts/ipc/updaterAPI'
 
 dotenv.config()
 
@@ -106,41 +109,90 @@ export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST
 
+let updaterStatus: UpdaterStatusSnapshot = { kind: 'idle' }
+
+function broadcastToAllWindows(channel: string, payload: unknown): void {
+    for (const win of BrowserWindow.getAllWindows()) {
+        if (win.isDestroyed()) continue
+        win.webContents.send(channel, payload)
+    }
+}
+
+function setUpdaterStatus(next: UpdaterStatusSnapshot): void {
+    updaterStatus = next
+    broadcastToAllWindows(IPC.UPDATE_STATUS, next)
+}
+
 function initAutoUpdater(): void {
     ipcMain.on(IPC.UPDATE_RESTART, () => {
         autoUpdater.quitAndInstall()
     })
+    ipcMain.handle(IPC.UPDATE_GET_STATUS, () => updaterStatus)
+    ipcMain.handle(IPC.UPDATE_CHECK, async () => {
+        if (!app.isPackaged) {
+            const next: UpdaterStatusSnapshot = {
+                kind: 'unavailable',
+                message: 'Updates can be checked in packaged builds.',
+            }
+            setUpdaterStatus(next)
+            return next
+        }
+
+        setUpdaterStatus({ kind: 'checking' })
+
+        try {
+            const result = await autoUpdater.checkForUpdates()
+            await result?.downloadPromise
+            return updaterStatus
+        } catch (error) {
+            const next: UpdaterStatusSnapshot = {
+                kind: 'error',
+                message: error instanceof Error ? error.message : String(error),
+            }
+            setUpdaterStatus(next)
+            return next
+        }
+    })
 
     if (!app.isPackaged) {
         console.log('[updater] skipped in development')
+        setUpdaterStatus({
+            kind: 'unavailable',
+            message: 'Updates can be checked in packaged builds.',
+        })
         return
     }
 
     autoUpdater.on('checking-for-update', () => {
         console.log('[updater] checking for updates')
+        setUpdaterStatus({ kind: 'checking' })
     })
 
     autoUpdater.on('update-available', (info) => {
         console.log(`[updater] update available: ${info.version}`)
+        setUpdaterStatus({ kind: 'available', version: info.version })
     })
 
     autoUpdater.on('update-not-available', () => {
         console.log('[updater] no update available')
+        setUpdaterStatus({ kind: 'current' })
     })
 
     autoUpdater.on('error', (error) => {
         console.error('[updater] failed to check for updates', error)
+        setUpdaterStatus({
+            kind: 'error',
+            message: error instanceof Error ? error.message : String(error),
+        })
     })
 
     autoUpdater.on('update-downloaded', (info) => {
         console.log(`[updater] update downloaded: ${info.version}`)
+        setUpdaterStatus({ kind: 'ready', version: info.version })
         const payload: UpdateReadyPayload = {
             version: info.version,
         }
-        for (const win of BrowserWindow.getAllWindows()) {
-            if (win.isDestroyed()) continue
-            win.webContents.send(IPC.UPDATE_READY, payload)
-        }
+        broadcastToAllWindows(IPC.UPDATE_READY, payload)
     })
 
     void autoUpdater.checkForUpdatesAndNotify().catch((error) => {

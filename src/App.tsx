@@ -35,6 +35,7 @@ export default function App() {
                             <Route path="model-settings" element={<ModelSettingsPage />} />
                             <Route path="strategy" element={<StrategySettings />} />
                             <Route path="general" element={<GeneralSettings />} />
+                            <Route path="general/updates" element={<GeneralSettings />} />
                             <Route path="privacy" element={<PrivacySettings />} />
                         </Route>
                     </Routes>

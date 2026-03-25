@@ -93,6 +93,9 @@ export const IPC = {
     IS_CONV_BUSY: 'is-conversation-busy',
     UPDATE_READY: 'update-ready',
     UPDATE_RESTART: 'update-restart',
+    UPDATE_STATUS: 'update-status',
+    UPDATE_GET_STATUS: 'update:get-status',
+    UPDATE_CHECK: 'update:check',
 
     STRATEGY_REPLAY_STARTED: 'strategy-replay-started',
     STRATEGY_REPLAY_PROGRESS: 'strategy-replay-progress',

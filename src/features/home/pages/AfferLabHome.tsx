@@ -1,9 +1,12 @@
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { BookOpen, Globe } from "lucide-react"
+import { BookOpen, Globe, Upload } from "lucide-react"
 import Topbar from "@/features/chat/components/Topbar"
 import { Button } from "@/shared/ui/button"
 import { useChatStore } from "@/features/chat/state/chatStore"
 import RecentConversations from "@/features/home/components/RecentConversations"
+import { openUpdateModal } from "@/components/updateModalEvents"
+import type { UpdaterStatusSnapshot } from "@contracts/ipc/updaterAPI"
 
 const WEBSITE_URL = "https://afferlab.com"
 const DOCS_URL = "https://docs.afferlab.com"
@@ -11,6 +14,26 @@ const DOCS_URL = "https://docs.afferlab.com"
 export default function AfferLabHome() {
     const createDraftConversation = useChatStore((s) => s.createDraftConversation)
     const navigate = useNavigate()
+    const [updateStatus, setUpdateStatus] = useState<UpdaterStatusSnapshot>({ kind: "idle" })
+
+    useEffect(() => {
+        let mounted = true
+
+        void window.updater.getStatus().then((status) => {
+            if (!mounted) return
+            setUpdateStatus(status)
+        })
+
+        const removeStatusListener = window.updater.onStatusChange((status) => {
+            if (!mounted) return
+            setUpdateStatus(status)
+        })
+
+        return () => {
+            mounted = false
+            removeStatusListener()
+        }
+    }, [])
 
     const handleNewChat = async () => {
         const settings = await window.chatAPI?.settings?.get?.().catch(() => null)
@@ -25,16 +48,33 @@ export default function AfferLabHome() {
         navigate("/")
     }
 
+    const isUpdateReady = updateStatus.kind === "ready"
+
     return (
         <div className="relative flex flex-1 min-h-0 flex-col">
-            <Topbar showMemoryCloud={false} showDevToggle={false} />
-            <main className="flex-1 min-h-0 overflow-y-auto pt-6">
+            <Topbar
+                showMemoryCloud={false}
+                showDevToggle={false}
+                rightAddon={isUpdateReady ? (
+                    <button
+                        type="button"
+                        className="ui-fast ui-press inline-flex h-9 cursor-pointer items-center gap-2 rounded-3xl bg-[var(--success-bg)] px-4 text-sm font-semibold text-[var(--success-fg)] transition-colors hover:brightness-[0.98] active:scale-[0.99]"
+                        onClick={() => {
+                            openUpdateModal({ version: updateStatus.version })
+                        }}
+                    >
+                        <Upload className="h-4 w-4" strokeWidth={2.6} />
+                        <span>Update available</span>
+                    </button>
+                ) : null}
+            />
+            <main className="flex-1 min-h-0 overflow-y-auto pt-3">
                 <div className="flex min-h-full items-center justify-center px-6 py-1">
-                    <div className="flex w-full max-w-2xl select-none flex-col items-center gap-6 text-center text-tx">
+                    <div className="flex w-full max-w-2xl select-none flex-col items-center gap-5 text-center text-tx">
                         <div className="flex items-center gap-4">
                             <img src="/images/logo_black.svg" alt="AfferLab" className="h-10 w-10 dark:hidden" />
                             <img src="/images/logo_white.svg" alt="AfferLab" className="hidden h-10 w-10 dark:block" />
-                            <h1 className="text-[44px] select-none font-semibold">AfferLab</h1>
+                            <h1 className="text-[44px] leading-none select-none font-semibold">AfferLab</h1>
                         </div>
 
                         <p className="text-sm select-none text-tx/50">

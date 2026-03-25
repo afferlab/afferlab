@@ -7,6 +7,7 @@ type SettingsRowProps = {
     onClick?: () => void
     active?: boolean
     disabled?: boolean
+    end?: boolean
 
     /** Pass content only; do not include sizing/background/radius because SettingsRow controls the shared appearance. */
     leading?: ReactNode
@@ -56,6 +57,7 @@ export default function SettingsRow({
                                         onClick,
                                         active = false,
                                         disabled = false,
+                                        end = false,
                                         leading,
                                         label,
                                         rightSlot,
@@ -77,6 +79,7 @@ export default function SettingsRow({
         return (
             <NavLink
                 to={to}
+                end={end}
                 className={({ isActive }) =>
                     rowClass({ active: isActive, disabled, className })
                 }

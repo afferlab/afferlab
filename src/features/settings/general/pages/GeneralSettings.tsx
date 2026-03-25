@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react"
-import { Settings } from "lucide-react"
+import { BellRing, Settings } from "lucide-react"
 import SettingsList from "@/features/settings/shell/components/SettingsList"
 import SettingsRow from "@/features/settings/shell/components/SettingsRow"
 import { Switch } from "@/shared/ui/switch"
 import { useThemeStore } from "@/features/settings/general/state/themeStore"
 import SettingsDropdown from "@/features/settings/shell/components/SettingsDropdown"
 import type { AppSettings } from "@contracts"
+import { Button } from "@/shared/ui/button"
+import { useLocation } from "react-router-dom"
+import { openUpdateModal } from "@/components/updateModalEvents"
+import type { UpdaterStatusSnapshot } from "@contracts/ipc/updaterAPI"
 
 type ThemeMode = "system" | "dark" | "light"
 type LaunchBehavior = "open_last" | "show_home"
@@ -34,10 +38,14 @@ const THEME_OPTIONS: Array<{ value: ThemeMode; label: string }> = [
 ]
 
 export default function GeneralSettings() {
+    const location = useLocation()
     const theme = useThemeStore((s) => s.theme)
     const setTheme = useThemeStore((s) => s.setTheme)
     const [loading, setLoading] = useState(true)
     const [state, setState] = useState<GeneralSettingsState>(DEFAULTS)
+    const [updateStatus, setUpdateStatus] = useState<UpdaterStatusSnapshot>({ kind: "idle" })
+    const [checkingUpdates, setCheckingUpdates] = useState(false)
+    const isUpdatesPanel = location.pathname === "/settings/general/updates"
 
     useEffect(() => {
         let mounted = true
@@ -79,6 +87,25 @@ export default function GeneralSettings() {
         setState((prev) => (prev.theme === theme ? prev : { ...prev, theme }))
     }, [theme])
 
+    useEffect(() => {
+        let mounted = true
+
+        void window.updater.getStatus().then((status) => {
+            if (!mounted) return
+            setUpdateStatus(status)
+        })
+
+        const removeStatusListener = window.updater.onStatusChange((status) => {
+            if (!mounted) return
+            setUpdateStatus(status)
+        })
+
+        return () => {
+            mounted = false
+            removeStatusListener()
+        }
+    }, [])
+
     const commit = (patch: Partial<GeneralSettingsState>) => {
         const next = { ...state, ...patch }
         setState(next)
@@ -92,6 +119,78 @@ export default function GeneralSettings() {
         })
     }
 
+    const handleCheckUpdates = async () => {
+        setCheckingUpdates(true)
+        try {
+            const next = await window.updater.check()
+            setUpdateStatus(next)
+        } finally {
+            setCheckingUpdates(false)
+        }
+    }
+
+    const renderUpdateStatus = () => {
+        if (checkingUpdates || updateStatus.kind === "checking") {
+            return (
+                <div className="rounded-md border border-border/60 bg-bg-chatarea/40 px-4 py-3 text-sm font-semibold text-tx/70">
+                    Checking for updates...
+                </div>
+            )
+        }
+
+        if (updateStatus.kind === "current") {
+            return (
+                <div className="rounded-md border border-[var(--success-fg)]/15 bg-[var(--success-bg)]/70 px-4 py-3 text-sm font-semibold text-[var(--success-fg)]">
+                    You're on the latest version.
+                </div>
+            )
+        }
+
+        if (updateStatus.kind === "unavailable") {
+            return (
+                <div className="rounded-md border border-border/60 bg-bg-chatarea/40 px-4 py-3 text-sm font-semibold text-tx/70">
+                    {updateStatus.message}
+                </div>
+            )
+        }
+
+        if (updateStatus.kind === "available") {
+            return (
+                <div className="rounded-md border border-[var(--success-fg)]/15 bg-[var(--success-bg)]/70 px-4 py-3 text-sm font-semibold text-[var(--success-fg)]">
+                    Update available. Downloading...
+                </div>
+            )
+        }
+
+        if (updateStatus.kind === "ready") {
+            return (
+                <button
+                    type="button"
+                    className="ui-fast ui-press w-full cursor-pointer rounded-md border border-[var(--success-fg)]/15 bg-[var(--success-bg)]/70 px-4 py-3 text-left text-sm font-semibold text-[var(--success-fg)] active:scale-[0.99]"
+                    onClick={() => {
+                        openUpdateModal({ version: updateStatus.version })
+                    }}
+                >
+                    Update available
+                </button>
+            )
+        }
+
+        if (updateStatus.kind === "error") {
+            return (
+                <div className="rounded-md border border-[var(--error-fg)]/20 bg-[var(--error-bg)]/70 px-4 py-3 text-sm font-semibold text-[var(--error-fg)]">
+                    {updateStatus.message}
+                </div>
+            )
+        }
+
+        return (
+            <div className="rounded-md border border-border/60 bg-bg-chatarea/40 px-4 py-3 text-sm font-semibold text-tx/60">
+                Click the button to check for updates.
+            </div>
+        )
+    }
+
     if (loading) {
         return (
             <div className="h-full flex items-center justify-center text-sm text-tx/60">
@@ -101,10 +200,12 @@ export default function GeneralSettings() {
     }
 
     return (
-        <div className="h-full min-h-0 flex flex-col bg-bg-chatarea">
+            <div className="h-full min-h-0 flex flex-col bg-bg-chatarea">
             <div className="px-5">
                 <div className="h-12 [-webkit-app-region:drag] pt-4">
-                    <div className="text-xl text-tx font-semibold select-none">General</div>
+                    <div className="text-xl text-tx font-semibold select-none">
+                        {isUpdatesPanel ? "Check Updates" : "General"}
+                    </div>
                 </div>
                 <div className="mt-1 border-b border-border" />
             </div>
@@ -114,15 +215,45 @@ export default function GeneralSettings() {
                     <SettingsList contentClassName="pt-3">
                         <SettingsRow
                             to="/settings/general"
-                            className="border border-border !shadow-none"
+                            end
                             leading={<Settings className="h-5 w-5 opacity-80" />}
                             label="General"
+                        />
+                        <SettingsRow
+                            to="/settings/general/updates"
+                            leading={<BellRing className="h-5 w-5 opacity-80" />}
+                            label="Check Updates"
                         />
                     </SettingsList>
                 </aside>
 
                 <section className="min-h-0 h-full flex-1 bg-bg-chatarea overflow-y-auto scrollbar-sidebar">
                     <div className="px-5">
+                        {isUpdatesPanel ? (
+                            <div className="mt-3 space-y-3">
+                                <div className="rounded-md border border-border bg-bg-setting-card px-3 py-3">
+                                    <div className="flex items-center gap-2">
+                                        <div className="text-sm font-extrabold text-tx py-1 select-none">Updates</div>
+                                    </div>
+                                    <div className="mt-1 border-b border-border" />
+
+                                    <div className="mt-3 space-y-4 py-3">
+                                        <Button
+                                            size="lg"
+                                            className="cursor-pointer border-0 text-sm font-semibold shadow-none"
+                                            onClick={() => {
+                                                void handleCheckUpdates()
+                                            }}
+                                        >
+                                            {checkingUpdates || updateStatus.kind === "checking"
+                                                ? "Checking..."
+                                                : "Check for Updates"}
+                                        </Button>
+                                        {renderUpdateStatus()}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
                         <div className="mt-3 space-y-3">
                             {/* Appearance */}
                             <div className="rounded-md border border-border bg-bg-setting-card px-3 py-3">
@@ -219,6 +350,7 @@ export default function GeneralSettings() {
                                 </div>
                             </div>
                         </div>
+                        )}
                     </div>
                 </section>
             </div>

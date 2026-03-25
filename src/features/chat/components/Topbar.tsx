@@ -5,14 +5,19 @@ import { useUIStore } from "@/features/chat/state/uiStore"
 import { PanelLeftOpen, PanelRightClose, PanelRightOpen } from "lucide-react"
 import clsx from "clsx"
 import { useDevUiStore } from "@/features/strategy-dev/state/devUiStore"
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 
 type TopbarProps = {
     showMemoryCloud?: boolean
     showDevToggle?: boolean
+    rightAddon?: ReactNode
 }
 
-export default function Topbar({ showMemoryCloud = true, showDevToggle = true }: TopbarProps) {
+export default function Topbar({
+    showMemoryCloud = true,
+    showDevToggle = true,
+    rightAddon,
+}: TopbarProps) {
     const selectedConversationId = useChatStore((s) => s.selectedConversationId)
     const conversations = useChatStore((s) => s.conversations)
     const draftConversation = useChatStore((s) => s.draftConversation)
@@ -111,7 +116,7 @@ export default function Topbar({ showMemoryCloud = true, showDevToggle = true }:
             window.removeEventListener("resize", updateCollisionInsets)
             ro?.disconnect()
         }
-    }, [sidebarCollapsed, isDevConversation, showDevToggle, showMemoryCloudBar])
+    }, [sidebarCollapsed, isDevConversation, showDevToggle, showMemoryCloudBar, rightAddon])
 
     return (
         <div ref={topbarRef} className="absolute inset-x-0 top-0 z-40 h-14 bg-transparent text-tx [-webkit-app-region:drag]">
@@ -173,6 +178,7 @@ export default function Topbar({ showMemoryCloud = true, showDevToggle = true }:
                         {isDevPanelOpen ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />}
                     </button>
                 ) : null}
+                {rightAddon}
                 <ThemeToggle />
             </div>
         </div>

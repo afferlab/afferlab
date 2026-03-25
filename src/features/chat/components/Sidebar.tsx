@@ -5,7 +5,9 @@ import ConversationItem from "./ConversationItem"
 import { useChatStore } from "@/features/chat/state/chatStore"
 import { useUIStore } from "@/features/chat/state/uiStore"
 import { motion } from "framer-motion"
-import { Search, SquarePen, Settings, PanelLeftClose } from "lucide-react"
+import { Search, SquarePen, Settings, PanelLeftClose, Upload } from "lucide-react"
+import { openUpdateModal } from "@/components/updateModalEvents"
+import type { UpdaterStatusSnapshot } from "@contracts/ipc/updaterAPI"
 
 const sidebarLayoutTransition = {
     layout: {
@@ -35,10 +37,30 @@ export default function Sidebar() {
     const isChatRoute = location.pathname === "/"
     const isAfferLabActive = location.pathname.startsWith("/afferlab")
     const isDraftSelected = Boolean(draftConversation?.id && selectedId === draftConversation.id)
+    const [updateStatus, setUpdateStatus] = useState<UpdaterStatusSnapshot>({ kind: "idle" })
 
     useEffect(() => {
         window.chatAPI.getAllConversations().then(setConversations)
     }, [setConversations])
+
+    useEffect(() => {
+        let mounted = true
+
+        void window.updater.getStatus().then((status) => {
+            if (!mounted) return
+            setUpdateStatus(status)
+        })
+
+        const removeStatusListener = window.updater.onStatusChange((status) => {
+            if (!mounted) return
+            setUpdateStatus(status)
+        })
+
+        return () => {
+            mounted = false
+            removeStatusListener()
+        }
+    }, [])
 
     useEffect(() => {
         window.chatAPI.onConversationTitleUpdated((_e, data) => {
@@ -96,6 +118,7 @@ export default function Sidebar() {
         () => filtered.filter((conv) => !isDevConversation(conv)),
         [filtered]
     )
+    const isUpdateReady = updateStatus.kind === "ready"
 
     return (
         <div className="bg-bg-chatarea h-screen pt-2 pb-2 pl-2">
@@ -146,23 +169,38 @@ export default function Sidebar() {
                             </div>
 
 
-                            <Link
-                                to="/afferlab"
+                            <div
                                 className={clsx(
                                     "mt-3 select-none w-full",
                                     "flex items-center gap-2",
                                     "h-9 rounded-xl px-3",
-                                    "text-sm cursor-pointer text-tx",
+                                    "text-sm text-tx",
                                     isAfferLabActive
                                         ? "bg-bg-sidebar-button-active"
                                         : "hover:bg-bg-sidebar-button-hover",
-                                    "ui-fast ui-press transition-colors"
+                                    "ui-fast transition-colors"
                                 )}
                             >
-                                <img src="/images/logo_black.svg" alt="AfferLab" className="h-4 w-4 dark:hidden" />
-                                <img src="/images/logo_white.svg" alt="AfferLab" className="hidden h-4 w-4 dark:block" />
-                                <span>AfferLab</span>
-                            </Link>
+                                <Link to="/afferlab" className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 self-stretch">
+                                    <img src="/images/logo_black.svg" alt="AfferLab" className="h-4 w-4 dark:hidden" />
+                                    <img src="/images/logo_white.svg" alt="AfferLab" className="hidden h-4 w-4 dark:block" />
+                                    <span>AfferLab</span>
+                                </Link>
+                                {isUpdateReady ? (
+                                    <button
+                                        type="button"
+                                        className="ui-fast ui-press grid h-5 w-5 shrink-0 cursor-pointer place-items-center rounded-full bg-[var(--success-bg)] text-[var(--success-fg)] active:scale-[0.99]"
+                                        onClick={(event) => {
+                                            event.preventDefault()
+                                            event.stopPropagation()
+                                            openUpdateModal({ version: updateStatus.version })
+                                        }}
+                                        aria-label="Open update dialog"
+                                    >
+                                        <Upload className="h-3 w-3" strokeWidth={2.8} />
+                                    </button>
+                                ) : null}
+                            </div>
 
                             <button
                                 onClick={handleNewConversation}
