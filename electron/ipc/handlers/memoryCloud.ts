@@ -193,7 +193,7 @@ export function registerMemoryCloudIPC() {
             deleteAsset(db, { conversationId: args.conversationId, assetId: args.assetId })
             touchConversation(db, args.conversationId)
             const strategyHost = new StrategyHost(db)
-            void strategyHost.runCloudRemove({
+            await strategyHost.runCloudRemove({
                 conversationId: args.conversationId,
                 payload: { assetId: args.assetId },
             })

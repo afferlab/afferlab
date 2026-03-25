@@ -105,6 +105,7 @@ const CONTEXT_BUILD_TIMEOUT_MS = 8000
 const TURN_END_TIMEOUT_MS = 15000
 const CLOUD_HOOK_TIMEOUT_MS = 5000
 const REPLAY_TURN_TIMEOUT_MS = 15000
+const WORKER_DISPOSE_TIMEOUT_MS = 1000
 
 const DEFAULT_TOOL_CALL_TIMEOUT_MS = Number(process.env.TOOL_TIMEOUT_DEFAULT_MS ?? '8000')
 
@@ -132,20 +133,31 @@ export class WorkerManager {
     private seq = 0
 
     disposeWorker(conversationId: string): void {
+        void this.disposeWorkerGracefully(conversationId)
+    }
+
+    async disposeWorkerGracefully(conversationId: string): Promise<void> {
         const handle = this.workers.get(conversationId)
         if (!handle) return
         handle.unhealthy = true
+        this.workers.delete(conversationId)
         for (const pending of handle.pending.values()) {
             clearTimeout(pending.timeoutId)
             pending.reject(new Error('[strategy-worker] disposed'))
         }
         handle.pending.clear()
         try {
-            void handle.worker.terminate()
+            await this.requestOnHandle(handle, 'dispose', undefined, WORKER_DISPOSE_TIMEOUT_MS, {
+                terminateOnTimeout: false,
+            })
+        } catch {
+            // ignore graceful dispose failures
+        }
+        try {
+            await handle.worker.terminate()
         } catch {
             // ignore terminate failures
         }
-        this.workers.delete(conversationId)
     }
 
     async requestContextBuild(conversationId: string, payload: unknown): Promise<unknown> {
@@ -188,6 +200,16 @@ export class WorkerManager {
         options?: { terminateOnTimeout?: boolean; timeoutResult?: unknown },
     ): Promise<unknown> {
         const handle = this.getOrCreateWorker(conversationId)
+        return this.requestOnHandle(handle, type, payload, timeoutMs, options)
+    }
+
+    private requestOnHandle(
+        handle: WorkerHandle,
+        type: RequestType,
+        payload: unknown,
+        timeoutMs: number,
+        options?: { terminateOnTimeout?: boolean; timeoutResult?: unknown },
+    ): Promise<unknown> {
         const id = String(++this.seq)
         const request: StrategyWorkerRequest = { id, type, payload }
 
@@ -267,6 +289,8 @@ export class WorkerManager {
 
         worker.on('error', (err) => {
             console.warn('[strategy-worker] error', { conversationId, err })
+            const current = this.workers.get(conversationId)
+            if (current !== handle || handle.unhealthy) return
             this.failWorker(conversationId, err instanceof Error ? err : new Error(String(err)))
         })
 
@@ -274,8 +298,12 @@ export class WorkerManager {
             if (code !== 0) {
                 console.warn('[strategy-worker] exit', { conversationId, code })
             }
-            this.failWorker(conversationId, new Error(`worker exited with code ${code ?? 'unknown'}`))
-            if (code !== 0) {
+            const current = this.workers.get(conversationId)
+            const shouldRecover = code !== 0 && current === handle && !handle.unhealthy
+            if (current === handle && !handle.unhealthy) {
+                this.failWorker(conversationId, new Error(`worker exited with code ${code ?? 'unknown'}`))
+            }
+            if (shouldRecover) {
                 const next = this.spawnWorker(conversationId)
                 this.workers.set(conversationId, next)
             }

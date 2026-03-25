@@ -324,6 +324,25 @@ export function deleteAsset(
 ): void {
     assertConversationId(args.conversationId)
     const tx = db.transaction(() => {
+        const linkedMemoryIds = db.prepare(`
+            SELECT DISTINCT memory_id
+            FROM memory_assets
+            WHERE id = ? AND conversation_id = ?
+        `).all(args.assetId, args.conversationId) as Array<{ memory_id: string }>
+
+        if (linkedMemoryIds.length > 0) {
+            const deleteMemoryItemStmt = db.prepare(`
+                DELETE FROM memory_items
+                WHERE id = ?
+                  AND scope_type = 'conversation'
+                  AND scope_id = ?
+            `)
+            for (const row of linkedMemoryIds) {
+                deleteMemoryItemStmt.run(row.memory_id, args.conversationId)
+            }
+            return
+        }
+
         db.prepare(`
             DELETE FROM memory_vectors
             WHERE asset_id = ? AND conversation_id = ?

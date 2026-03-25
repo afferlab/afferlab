@@ -9,6 +9,8 @@ import { cancelRunningSessions, createStrategySession, getLatestTseq } from './s
 import { cancelReplayJob, getReplayBusy, startReplayJob } from './replayManager'
 import { reindexConversationMemory } from '../memory/memoryStore'
 import type { StrategySwitchMode } from '../../../contracts/index'
+import { streamManager } from '../../engine/chat/streaming/StreamManager'
+import { disposeStrategyWorkers } from '../../engine/strategy/host/createStrategyHost'
 
 export type StrategySwitchInput = {
     conversationId: string
@@ -104,12 +106,17 @@ export function switchConversationStrategy(
 ): StrategySwitchResult {
     const conversationId = args.conversationId
     const resolved = resolveStrategyForSwitch(db, args)
+    const streamBusy = streamManager.isConversationBusy(conversationId)
+    if (streamBusy?.busy) {
+        throw new Error('CONVERSATION_BUSY')
+    }
 
     const busy = getReplayBusy(conversationId)
     if (busy) {
         cancelReplayJob(busy.sessionId)
     }
     cancelRunningSessions(db, conversationId)
+    disposeStrategyWorkers([conversationId])
 
     setConversationStrategy(db, {
         conversationId,

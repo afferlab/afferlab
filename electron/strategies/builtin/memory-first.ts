@@ -97,11 +97,8 @@ const strategy = defineStrategy({
     },
 
     async onCloudRemove(ctx, { assetId }) {
-        try {
-            await ctx.memory.removeMemory(assetId)
-        } catch {
-            // ignore
-        }
+        void ctx
+        void assetId
     },
 })
 
