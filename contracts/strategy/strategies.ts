@@ -397,6 +397,9 @@ export type StrategyMeta = {
     description?: string
     version?: string
     icon?: string
+    features?: {
+        memoryCloud?: boolean
+    }
 }
 
 export type StrategyHooks<TConfig extends Record<string, unknown> = Record<string, unknown>> = {

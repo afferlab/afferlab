@@ -13,13 +13,7 @@ This value is only available in **post-turn hooks** that run after the model fin
 
 During prompt construction (`onContextBuild`), `ctx.message` is always `null`.
 
-It becomes populated when the host invokes hooks such as:
-
-- `onTurnEnd`
-- `onToolCall`
-- `onError`
-
-In these hooks, `ctx.message` refers to the assistant message that was just produced.
+It becomes populated in post-turn hooks where the host provides the assistant message for the current turn, such as `onTurnEnd`.
 
 ---
 
@@ -41,11 +35,10 @@ interface TurnMessage {
 - `role` – always `"assistant"`
 - `content` – textual content produced by the model
 - `finishReason` – reason the model stopped generating
-- `toolCalls` – tool calls issued during this turn (if any)
+- `toolCalls` – reserved for tool-capable flows
 
 `content` may be `null` in cases such as:
 
-- the model produced only tool calls
 - generation failed
 - the turn was aborted
 
@@ -57,7 +50,6 @@ Strategies typically use `ctx.message` in post-turn hooks to:
 
 - skip post-processing after aborted or failed turns
 - extract structured memory from generated text
-- inspect tool calls produced during the turn
 
 Example:
 
@@ -75,6 +67,8 @@ export async function onTurnEnd(ctx) {
   // perform memory extraction or post-processing
 }
 ```
+
+In v0.1, strategies should primarily rely on `content` and `finishReason`.
 
 ---
 

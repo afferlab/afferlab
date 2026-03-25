@@ -11,7 +11,7 @@ description: ctx.slots is the prompt assembly API used by strategies during cont
 interface Slots {
   add(
     name: string,
-    content: string | Message | Message[] | Input | null,
+    content: string | Message | Message[] | Input | Attachment | Attachment[] | null,
     options?: {
       priority?: number
       maxRatio?: number
@@ -50,9 +50,17 @@ The content may be:
 - a `string`
 - a single `Message`
 - an array of `Message`
+- an `Input`
+- a single `Attachment`
+- an array of `Attachment`
 - `null`
 
-If a string is provided, it will be converted into a message using the specified role or the default `user` role.
+If a role is not specified, the runtime chooses a default role based on the slot name:
+
+- if the slot name is `system`, the default role is `system`
+- otherwise, the default role is `user`
+
+This same defaulting rule applies when the content is a string, `Input`, or attachments.
 
 Arrays of messages are treated as a logical group and participate in trimming together unless char-level trimming is enabled.
 
@@ -245,7 +253,7 @@ export async function onContextBuild(ctx) {
   ctx.slots.add(
     "system",
     "You are a helpful assistant.",
-    { role: "system", priority: 100 }
+    { priority: 100 }
   )
 
   ctx.slots.add(

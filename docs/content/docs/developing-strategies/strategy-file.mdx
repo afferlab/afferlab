@@ -61,7 +61,6 @@ export default defineStrategy({
 
         return {
             prompt: ctx.slots.render(),
-            tools: [],
         }
     },
 })
@@ -77,10 +76,9 @@ The worker loader currently recognizes:
 - `onCloudRemove`
 - `onReplayTurn`
 - `onCleanup`
-- `onError`
-- `onToolCall`
 
 You can export them through a `hooks` object.
+For upcoming hooks, see the lifecycle documentation.
 
 #
 #

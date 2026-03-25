@@ -42,11 +42,14 @@ A normalized list of uploaded assets associated with the current user turn.
 
 ## Usage
 
-Strategies can pass the full user input directly into the prompt:
+Strategies may pass the full user input directly into the prompt:
 ```ts
 ctx.slots.add('input', ctx.input)
 ```
 This forwards both the message text and its attachments.
+
+If `ctx.input` is omitted during prompt construction, AfferLab will automatically include the current user input as a fallback.
+If a strategy includes `ctx.input` explicitly, it will not be duplicated.
 
 Strategies may also access specific fields when needed:
 ```ts

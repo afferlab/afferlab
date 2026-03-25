@@ -92,6 +92,9 @@ interface MemoryIngestOptions {
 }
 ```
 
+This is the simplified public API for v0.1.
+Advanced ingestion parameters are intentionally not exposed in the documentation.
+
 **Return:** `Promise<MemoryIngestResult | MemoryIngestResult[]>`
 Example:
 
@@ -192,6 +195,9 @@ interface MemorySearchOptions {
 
 }
 ```
+
+This is the simplified public API for v0.1.
+Advanced retrieval parameters are intentionally not exposed in the documentation.
 
 **Return:** `Promise<MemoryHit[]>`
 
@@ -307,6 +313,8 @@ await ctx.memory.ingest(summaryText, {
 - `query()` → structured filtering (list)
 - `search()` → semantic retrieval (RAG)
 - `readAsset()` → load full content
+
+Advanced ingestion and retrieval parameters are intentionally not exposed in v0.1.
 
 Memory should not be relied on as a single source of truth.
 

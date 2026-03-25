@@ -47,13 +47,16 @@ When enabled, strategies may rely on structured response formats instead of prom
 
 Indicates whether the model supports tool/function calling.
 
-When `true`, strategies may register tools and allow the model to invoke them during generation.
+This flag describes model capability only.
+It does not guarantee that tool execution is available in the main conversation flow.
 
 ## Source of Truth
 
 Capability values are resolved by the host from the selected model configuration.
 
 Strategies should treat these flags as read-only indicators of the model’s available features.
+
+Tool execution is not yet available in the main conversation flow.
 
 ## Usage
 
@@ -64,6 +67,5 @@ if (ctx.capabilities.vision) {
   // include image attachments
 }
 
-if (ctx.capabilities.tools) {
-  // enable tool usage
-}
+const supportsTools = ctx.capabilities.tools
+// Capability flag only. Main conversation tool execution is not available in v0.1.

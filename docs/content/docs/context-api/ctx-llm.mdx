@@ -28,6 +28,9 @@ interface LLMTools {
 }
 ```
 
+Tool-related option fields are reserved for advanced host-managed flows.
+They are not part of the supported v0.1 main conversation flow.
+
 ## Overview
 
 `ctx.llm` lets a strategy call the currently selected model directly.
@@ -38,7 +41,6 @@ This is usually for internal strategy work such as:
 - rewriting prompts
 - classifying intent
 - extracting structured information
-- running a short host-managed tool loop
 
 The model configuration comes from the user's active model settings.
 These calls do not automatically modify conversation history or the prompt being built through `ctx.slots`.
@@ -65,13 +67,13 @@ const summary = await ctx.llm.call([
 ])
 ```
 
-When you use the `LLMMessage[]` overload, you may also provide `tools`, `toolChoice`, and `temperature`.
+When you use the `LLMMessage[]` overload, you may also provide additional call options such as `temperature`.
 
 ## run(options)
 
 `run()` executes a host-managed multi-round model loop.
 
-Use it when the model may need to call tools across multiple rounds before producing a final answer.
+Use it when a strategy needs a bounded multi-round model interaction.
 
 ```ts
 const result = await ctx.llm.run({
@@ -79,8 +81,6 @@ const result = await ctx.llm.run({
     { role: "system", content: "Answer carefully." },
     { role: "user", content: ctx.input.text }
   ],
-  tools,
-  toolChoice: "auto",
   maxRounds: 4
 })
 ```

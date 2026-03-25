@@ -9,7 +9,7 @@ description: Strategy hooks are invoked by the worker runtime during different p
 
 Strategies in AfferLab can export a small set of **lifecycle hooks**.
 
-These hooks are invoked by the worker runtime at different stages of a conversation, allowing strategies to control prompt construction, handle tool calls, write memory, and perform cleanup.
+These hooks are invoked by the worker runtime at different stages of a conversation, allowing strategies to control prompt construction, write memory, and perform cleanup.
 
 ---
 
@@ -91,9 +91,9 @@ Replay jobs may occur when a conversation switches strategies or when background
 
 ## `onToolCall` (coming soon)
 
-If exported, `onToolCall` allows the strategy to handle a tool call inside the strategy runtime.
+This hook is reserved for future tool-capable flows.
 
-If this hook is not exported, AfferLab falls back to the host's default tool execution path.
+It is not part of the supported v0.1 conversation flow yet.
 
 ---
 
@@ -102,12 +102,6 @@ If this hook is not exported, AfferLab falls back to the host's default tool exe
 If exported, `onCleanup` runs when the worker instance is disposed.
 
 This hook can be used to release worker-local resources.
-
----
-
-## `onError`
-
-If exported, `onError` runs when a worker-side request throws an error.
 
 #
 #
