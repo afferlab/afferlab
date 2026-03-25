@@ -1,4 +1,5 @@
 import { app, Menu } from 'electron'
+import { autoUpdater } from 'electron-updater'
 
 app.setName('AfferLab')
 
@@ -103,6 +104,37 @@ export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST
 
+function initAutoUpdater(): void {
+    if (!app.isPackaged) {
+        console.log('[updater] skipped in development')
+        return
+    }
+
+    autoUpdater.on('checking-for-update', () => {
+        console.log('[updater] checking for updates')
+    })
+
+    autoUpdater.on('update-available', (info) => {
+        console.log(`[updater] update available: ${info.version}`)
+    })
+
+    autoUpdater.on('update-not-available', () => {
+        console.log('[updater] no update available')
+    })
+
+    autoUpdater.on('error', (error) => {
+        console.error('[updater] failed to check for updates', error)
+    })
+
+    autoUpdater.on('update-downloaded', (info) => {
+        console.log(`[updater] update downloaded: ${info.version}`)
+    })
+
+    void autoUpdater.checkForUpdatesAndNotify().catch((error) => {
+        console.error('[updater] checkForUpdatesAndNotify failed', error)
+    })
+}
+
 function openMainWindow(): void {
   createMainWindow({
     publicPath: process.env.VITE_PUBLIC,
@@ -134,4 +166,5 @@ app.whenReady().then(async () => {
   registerAllIPC()
 
   openMainWindow()
+  initAutoUpdater()
 })

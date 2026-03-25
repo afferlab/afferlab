@@ -9,15 +9,28 @@
     "directories": {
       "buildResources": "build"
     },
+
     "mac": {
-      "icon": "build/icon.icns"
+      "icon": "build/icon.icns",
+      "target": ["dmg"],
+      "hardenedRuntime": true,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     },
+
     "win": {
       "icon": "build/icon.ico"
     },
+
     "linux": {
       "icon": "build/icon.png"
-    }
+    },
+
+    "publish": [
+      {
+        "provider": "github"
+      }
+    ]
   },
   "packageManager": "pnpm@10.32.0",
   "type": "module",
@@ -57,6 +70,7 @@
     "lucide-react": "^0.541.0",
     "next-themes": "^0.4.6",
     "pdf-parse": "^1.1.1",
+    "electron-updater": "^6.6.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-markdown": "^10.1.0",

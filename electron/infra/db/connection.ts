@@ -14,8 +14,6 @@ let db: Database | null = null
 let dbClosing = false
 
 function resolveDbPath(): string {
-    const override = process.env.AFFERLAB_DB_PATH?.trim() || process.env.SYNARA_DB_PATH?.trim()
-    if (override) return path.resolve(override)
     return path.join(app.getPath('userData'), 'chat.db')
 }
 
@@ -34,8 +32,8 @@ export function initDB(): Database {
     instance.pragma('busy_timeout = 5000')
 
     initializeVectorSupport(instance)
-    ensureSchema(instance)
-    runMigrations(instance)
+    const currentVersion = ensureSchema(instance)
+    runMigrations(instance, currentVersion)
 
     db = instance
     console.log(`[db] ready ${resolvedPath}`)

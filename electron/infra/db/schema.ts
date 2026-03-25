@@ -3,7 +3,15 @@ import { DEFAULT_STRATEGY_KEY, DEFAULT_STRATEGY_VERSION } from '../../core/strat
 
 export const TARGET_SCHEMA_VERSION = 1
 
-const SCHEMA_SQL = ` 
+const SCHEMA_VERSION_SQL = `
+            CREATE TABLE IF NOT EXISTS schema_version (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                version INTEGER NOT NULL,
+                updated_at INTEGER NOT NULL
+            );
+        `
+
+export const SCHEMA_SQL = ` 
             CREATE TABLE IF NOT EXISTS projects (
                 id TEXT PRIMARY KEY, 
                 name TEXT NOT NULL,
@@ -711,9 +719,30 @@ const SCHEMA_SQL = `
             ;
         `
 
-export function ensureSchema(instance: Database): void {
-    const runInitSchema = instance.transaction(() => {
-        instance.exec(SCHEMA_SQL)
+export function ensureSchema(instance: Database): number {
+    const currentVersion = instance.transaction(() => {
+        instance.exec(SCHEMA_VERSION_SQL)
+
+        const versionRow = instance
+            .prepare('SELECT version FROM schema_version WHERE id = 1')
+            .get() as { version: number } | undefined
+
+        if (versionRow) {
+            return versionRow.version
+        }
+
+        const legacyVersion = instance.pragma('user_version', { simple: true }) as number
+        const updatedAt = Date.now()
+
+        instance
+            .prepare(`
+                INSERT INTO schema_version (id, version, updated_at)
+                VALUES (1, ?, ?)
+            `)
+            .run(legacyVersion, updatedAt)
+
+        return legacyVersion
     })
-    runInitSchema()
+
+    return currentVersion()
 }
