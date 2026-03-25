@@ -2,6 +2,7 @@ import { BrowserWindow } from 'electron'
 import { v4 as uuidv4 } from 'uuid'
 import type { Database } from 'better-sqlite3'
 import type { UIMessage } from '../../../contracts/index'
+import type { ConversationTitleUpdatedEventData } from '../../../contracts/ipc/event'
 import { IPC } from '../../ipc/channels'
 import { callLLMUniversalNonStream } from '../../llm'
 import { resolveModelConfig } from '../models/modelRegistry'
@@ -16,7 +17,16 @@ const TITLE_MAX_TOKENS = 50
 
 const running = new Set<string>()
 
-function broadcastTitleUpdate(payload: any) {
+type AutoTitleRow = {
+    tseq: number
+    user_message_id?: string | null
+    title: string
+    title_source: string
+    asst_status?: string | null
+    asst_content?: string | null
+}
+
+function broadcastTitleUpdate(payload: ConversationTitleUpdatedEventData) {
     for (const win of BrowserWindow.getAllWindows()) {
         if (win.isDestroyed()) continue
         win.webContents.send(IPC.CONVERSATION_TITLE_UPDATED, payload)
@@ -51,7 +61,7 @@ export async function maybeAutoTitleConversation(args: {
                  JOIN conversations c ON c.id = t.conversation_id
                  LEFT JOIN messages m ON m.id = ? AND m.conversation_id = c.id
         WHERE t.id = ? AND c.id = ?
-    `).get(replyId, turnId, conversationId) as any
+    `).get(replyId, turnId, conversationId) as AutoTitleRow | undefined
 
     if (!row) return { updated: false, skipReason: 'turn_not_found' }
     if (row.tseq !== 1) return { updated: false, skipReason: 'not_first_turn' }

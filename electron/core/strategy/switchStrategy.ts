@@ -35,7 +35,7 @@ function resolveStrategyForSwitch(
     args: StrategySwitchInput,
 ): { strategyId: string; strategyKey: string; strategyVersion: string } {
     const strategies = getEffectiveStrategies(db)
-    let resolved = args.strategyId
+    const resolved = args.strategyId
         ? strategies.find(s => s.id === args.strategyId)
         : (args.strategyKey && args.strategyVersion)
             ? strategies.find(s => s.key === args.strategyKey && s.version === args.strategyVersion)

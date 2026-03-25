@@ -91,13 +91,17 @@ const strategy = defineStrategy({
                 mode: 'raw',
                 wait: 'load',
             })
-        } catch {}
+        } catch {
+            // ignore
+        }
     },
 
     async onCloudRemove(ctx, { assetId }) {
         try {
             await ctx.memory.removeMemory(assetId)
-        } catch {}
+        } catch {
+            // ignore
+        }
     },
 })
 
