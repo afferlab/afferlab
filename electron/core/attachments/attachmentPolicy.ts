@@ -10,7 +10,6 @@ import {
     normalizeAttachmentExt,
     normalizeAttachmentMime,
 } from '../../../shared/attachments/attachmentPolicy'
-import type { ModelCapabilities } from '../../../contracts/index'
 import { isPlatformAttachmentSupported } from './attachmentTypeRegistry'
 
 export {
@@ -23,22 +22,6 @@ export {
     mimeMatchesAllowlist,
     normalizeAttachmentExt,
     normalizeAttachmentMime,
-}
-
-export const PROVIDER_ATTACHMENT_CAPS_OVERRIDES: Record<string, Partial<Pick<ModelCapabilities, 'nativeFiles' | 'supportedMimeTypes' | 'maxFileSizeMB' | 'maxFilesPerTurn' | 'attachmentTransport'>>> = {
-    gemini: {
-        nativeFiles: false,
-        attachmentTransport: 'none',
-        supportedMimeTypes: [],
-    },
-    openai: {
-        nativeFiles: true,
-        attachmentTransport: 'remote_file_id',
-        supportedMimeTypes: [
-            'image/*',
-            'application/pdf',
-        ],
-    },
 }
 
 export type PolicyViolationCode =

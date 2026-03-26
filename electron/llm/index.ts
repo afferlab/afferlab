@@ -8,7 +8,7 @@ import { DeepSeekProvider } from './providers/deepseek'
 import { OllamaProvider } from './providers/ollama'
 import { LMStudioProvider } from './providers/lmstudio'
 import { loadProviderSettings } from '../config/providerSettings'
-import { DEFAULT_ATTACHMENT_LIMITS, GLOBAL_SUPPORTED_MIME_TYPES, PROVIDER_ATTACHMENT_CAPS_OVERRIDES } from '../core/attachments/attachmentPolicy'
+import { DEFAULT_ATTACHMENT_LIMITS, GLOBAL_SUPPORTED_MIME_TYPES } from '../core/attachments/attachmentPolicy'
 
 const registry: Provider[] = [
     OllamaProvider,
@@ -37,16 +37,13 @@ export function getProviderNativeFileCapabilities(
     providerId: string,
 ): Pick<ModelCapabilities, 'nativeFiles' | 'supportedMimeTypes' | 'maxFileSizeMB' | 'maxFilesPerTurn' | 'attachmentTransport'> {
     const provider = getProviderById(providerId)
-    const override = PROVIDER_ATTACHMENT_CAPS_OVERRIDES[providerId] ?? {}
-    const nativeFiles = override.nativeFiles ?? provider?.capabilities?.nativeFiles ?? false
+    const nativeFiles = provider?.capabilities?.nativeFiles ?? false
     const attachmentTransport = nativeFiles
-        ? (override.attachmentTransport ?? provider?.capabilities?.attachmentTransport ?? 'remote_file_id')
+        ? (provider?.capabilities?.attachmentTransport ?? 'remote_file_id')
         : 'none'
     const supportedMimeTypes = nativeFiles
-        ? (override.supportedMimeTypes?.length
-            ? override.supportedMimeTypes
-            : provider?.capabilities?.supportedMimeTypes?.length
-                ? provider.capabilities.supportedMimeTypes
+        ? (provider?.capabilities?.supportedMimeTypes?.length
+            ? provider.capabilities.supportedMimeTypes
             : GLOBAL_SUPPORTED_MIME_TYPES)
         : []
     return {
@@ -54,10 +51,10 @@ export function getProviderNativeFileCapabilities(
         attachmentTransport,
         supportedMimeTypes,
         maxFileSizeMB: nativeFiles
-            ? override.maxFileSizeMB ?? provider?.capabilities?.maxFileSizeMB ?? DEFAULT_ATTACHMENT_LIMITS.maxFileSizeMB
+            ? provider?.capabilities?.maxFileSizeMB ?? DEFAULT_ATTACHMENT_LIMITS.maxFileSizeMB
             : undefined,
         maxFilesPerTurn: nativeFiles
-            ? override.maxFilesPerTurn ?? provider?.capabilities?.maxFilesPerTurn ?? DEFAULT_ATTACHMENT_LIMITS.maxFilesPerTurn
+            ? provider?.capabilities?.maxFilesPerTurn ?? DEFAULT_ATTACHMENT_LIMITS.maxFilesPerTurn
             : undefined,
     }
 }
