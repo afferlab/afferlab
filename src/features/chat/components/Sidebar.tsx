@@ -8,6 +8,7 @@ import { motion } from "framer-motion"
 import { Search, SquarePen, Settings, PanelLeftClose, Upload } from "lucide-react"
 import { openUpdateModal } from "@/components/updateModalEvents"
 import type { UpdaterStatusSnapshot } from "@contracts/ipc/updaterAPI"
+import { Squircle } from "corner-smoothing"
 
 const sidebarLayoutTransition = {
     layout: {
@@ -124,8 +125,18 @@ export default function Sidebar() {
 
     return (
         <div className="bg-bg-chatarea h-screen pt-2 pb-2 pl-2">
-            <div className="h-full w-[248px] rounded-[18px] bg-[rgba(255,255,255,0.10)] p-[1px] dark:bg-white/[0.10]">
-                <div className="h-full w-full overflow-hidden rounded-[17px] bg-bg-sidebar text-tx">
+            <Squircle
+                cornerRadius={18}
+                cornerSmoothing={0.8}
+                className="h-full w-[248px] bg-[rgba(255,255,255,0.10)] p-[1px] dark:bg-white/[0.10]"
+                style={{ overflow: "hidden" }}
+            >
+                <Squircle
+                    cornerRadius={17}
+                    cornerSmoothing={0.8}
+                    className="h-full w-full bg-bg-sidebar text-tx"
+                    style={{ overflow: "hidden" }}
+                >
                     {/* Do not use border here, otherwise the standard curved-border issue returns */}
                     <aside className="h-full flex flex-col">
                         {/* Top drag region */}
@@ -312,8 +323,8 @@ export default function Sidebar() {
                             </Link>
                         </div>
                     </aside>
-                </div>
-            </div>
+                </Squircle>
+            </Squircle>
         </div>
     )
 }
