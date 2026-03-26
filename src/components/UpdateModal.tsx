@@ -19,6 +19,8 @@ type UpdateState = {
 }
 
 const RELEASES_URL = "https://github.com/afferlab/afferlab/releases"
+const logoBlackSrc = `${import.meta.env.BASE_URL}images/logo_black.svg`
+const logoWhiteSrc = `${import.meta.env.BASE_URL}images/logo_white.svg`
 const initialState: UpdateState = {
     open: false,
     version: "",
@@ -90,8 +92,8 @@ export default function UpdateModal() {
                                 </button>
                                 <DialogHeader className="border-b border-border/60 px-6 pt-6 pb-4 text-left font-semibold">
                                     <DialogTitle className="flex items-center gap-3 pr-10 text-lg font-semibold">
-                                        <img src="/images/logo_black.svg" alt="AfferLab" className="h-5 w-5 dark:hidden" />
-                                        <img src="/images/logo_white.svg" alt="AfferLab" className="hidden h-5 w-5 dark:block" />
+                                        <img src={logoBlackSrc} alt="AfferLab" className="h-5 w-5 dark:hidden" />
+                                        <img src={logoWhiteSrc} alt="AfferLab" className="hidden h-5 w-5 dark:block" />
                                         <span>Update Ready</span>
                                     </DialogTitle>
                                     <DialogDescription className="text-sm font-semibold text-tx/65">

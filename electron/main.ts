@@ -229,7 +229,8 @@ app.whenReady().then(async () => {
   registerStrategies()
 
   registerAllIPC()
+  console.log('IPC registered')
 
-  openMainWindow()
   initAutoUpdater()
+  openMainWindow()
 })

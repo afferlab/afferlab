@@ -16,6 +16,8 @@ const sidebarLayoutTransition = {
         damping: 35,
     },
 }
+const logoBlackSrc = `${import.meta.env.BASE_URL}images/logo_black.svg`
+const logoWhiteSrc = `${import.meta.env.BASE_URL}images/logo_white.svg`
 
 export default function Sidebar() {
     const conversations = useChatStore((s) => s.conversations)
@@ -182,8 +184,8 @@ export default function Sidebar() {
                                 )}
                             >
                                 <Link to="/afferlab" className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 self-stretch">
-                                    <img src="/images/logo_black.svg" alt="AfferLab" className="h-4 w-4 dark:hidden" />
-                                    <img src="/images/logo_white.svg" alt="AfferLab" className="hidden h-4 w-4 dark:block" />
+                                    <img src={logoBlackSrc} alt="AfferLab" className="h-4 w-4 dark:hidden" />
+                                    <img src={logoWhiteSrc} alt="AfferLab" className="hidden h-4 w-4 dark:block" />
                                     <span>AfferLab</span>
                                 </Link>
                                 {isUpdateReady ? (

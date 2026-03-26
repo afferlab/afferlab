@@ -10,6 +10,8 @@ import type { UpdaterStatusSnapshot } from "@contracts/ipc/updaterAPI"
 
 const WEBSITE_URL = "https://afferlab.com"
 const DOCS_URL = "https://docs.afferlab.com"
+const logoBlackSrc = `${import.meta.env.BASE_URL}images/logo_black.svg`
+const logoWhiteSrc = `${import.meta.env.BASE_URL}images/logo_white.svg`
 
 export default function AfferLabHome() {
     const createDraftConversation = useChatStore((s) => s.createDraftConversation)
@@ -72,8 +74,8 @@ export default function AfferLabHome() {
                 <div className="flex min-h-full items-center justify-center px-6 py-1">
                     <div className="flex w-full max-w-2xl select-none flex-col items-center gap-5 text-center text-tx">
                         <div className="flex items-center gap-4">
-                            <img src="/images/logo_black.svg" alt="AfferLab" className="h-10 w-10 dark:hidden" />
-                            <img src="/images/logo_white.svg" alt="AfferLab" className="hidden h-10 w-10 dark:block" />
+                            <img src={logoBlackSrc} alt="AfferLab" className="h-10 w-10 dark:hidden" />
+                            <img src={logoWhiteSrc} alt="AfferLab" className="hidden h-10 w-10 dark:block" />
                             <h1 className="text-[44px] leading-none select-none font-semibold">AfferLab</h1>
                         </div>
 

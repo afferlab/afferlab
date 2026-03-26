@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { BrowserRouter, HashRouter, Routes, Route, Navigate } from "react-router-dom"
 import ThemeProvider from "@/app/providers/ThemeProvider"
 import { Toaster } from "@/shared/ui/sonner"
 import ChatPage from "@/features/chat/pages/ChatPage"
@@ -15,8 +15,10 @@ import GeneralSettings from "@/features/settings/general/pages/GeneralSettings"
 import PrivacySettings from "@/features/settings/privacy/pages/PrivacySettings"
 
 export default function App() {
+    const Router = window.location.protocol === 'file:' ? HashRouter : BrowserRouter
+
     return (
-        <BrowserRouter>
+        <Router>
             <ThemeProvider>
                 <div className="min-h-screen text-[var(--color-text)] transition-colors duration-1000 ease-in-out">
                     <Routes>
@@ -43,6 +45,6 @@ export default function App() {
                     <Toaster />
                 </div>
             </ThemeProvider>
-        </BrowserRouter>
+        </Router>
     )
 }

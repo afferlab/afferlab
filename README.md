@@ -19,6 +19,9 @@
   ⚠️ <i>AfferLab is in early development. Expect breaking changes.</i>
 </p>
 
+<p align="center">
+   Agent features are in active development and coming soon.
+</p>
 ---
 
 ## What is AfferLab
