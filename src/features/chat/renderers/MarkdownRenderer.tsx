@@ -139,7 +139,7 @@ const MarkdownRenderer = memo(function MarkdownRenderer({
     }), [ranges])
 
     return (
-        <div className={className ?? 'min-w-0 text-[14px] font-medium leading-6 text-tx'}>
+        <div className={className ?? 'min-w-0 text-[14px] font-[550] leading-6 text-tx'}>
             <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
                 {content}
             </ReactMarkdown>

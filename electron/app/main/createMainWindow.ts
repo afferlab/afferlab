@@ -9,8 +9,8 @@ export function createMainWindow(args: {
 }): BrowserWindow {
     const windowOptions: BrowserWindowConstructorOptions = {
         icon: path.join(args.publicPath, 'electron-vite.svg'),
-        width: 920,
-        height: 590,
+        width: 1100,
+        height: 720,
         minWidth: 750,
         minHeight: 500,
         frame: true,

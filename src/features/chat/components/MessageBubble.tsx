@@ -100,7 +100,7 @@ export default function MessageBubble(props: MessageBubbleProps) {
                 {content ? (
                     <div className={bubbleShell}>
                         <div className="px-3">
-                            <div className="message-bubble-content text-[14px] !font-medium leading-6 whitespace-pre-wrap break-words">
+                            <div className="message-bubble-content text-[14px] !font-[550] leading-6 whitespace-pre-wrap break-words">
                                 {content}
                             </div>
                         </div>
@@ -115,7 +115,7 @@ export default function MessageBubble(props: MessageBubbleProps) {
             <div className={bubbleShell}>
                 {isUser ? (
                     <div className="px-3">
-                        <div className="message-bubble-content text-[14px] !font-medium leading-6 whitespace-pre-wrap break-words">
+                        <div className="message-bubble-content text-[14px] !font-[550] leading-6 whitespace-pre-wrap break-words">
                             {content}
                         </div>
                     </div>

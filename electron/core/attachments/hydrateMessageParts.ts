@@ -111,7 +111,7 @@ function loadAsset(
             ma.size_bytes,
             ma.meta,
             ab.bytes AS blob_bytes
-        FROM memory_assets
+        FROM memory_assets ma
         LEFT JOIN asset_blobs ab ON ab.id = ma.blob_id
         WHERE ma.id = ? AND ma.conversation_id = ?
         LIMIT 1
