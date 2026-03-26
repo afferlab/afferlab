@@ -7,6 +7,12 @@ description: A AfferLab strategy is a single TypeScript module with exported met
 
 ## Required Structure
 
+If you download the starter template from AfferLab, keep both files from the zip in the same folder.
+The `.d.ts` file provides editor types for `@afferlab/strategy-sdk` and for `ctx`.
+
+If your strategy does not define any config fields, omit `configSchema` entirely.
+Do not use `configSchema: []`. An empty schema breaks TypeScript inference and can cause hook parameters like `ctx` to lose their types.
+
 At minimum, a strategy file must export:
 
 - `meta`
@@ -60,7 +66,7 @@ export default defineStrategy({
         })
 
         return {
-            prompt: ctx.slots.render(),
+            prompt: { messages: ctx.slots.render() },
         }
     },
 })
