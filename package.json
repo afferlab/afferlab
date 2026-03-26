@@ -31,9 +31,11 @@
       "target": [
         "dmg"
       ],
+      "notarize": {
+        "teamId": "2L8CH632GJ"
+      },
       "artifactName": "${productName}-Mac-${version}-Installer.${ext}",
       "hardenedRuntime": true,
-      "notarize": true,
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist"
     },
@@ -149,7 +151,7 @@
     "@vitejs/plugin-react": "^4.2.1",
     "cpx": "^1.5.0",
     "electron": "^30.0.1",
-    "electron-builder": "^24.13.3",
+    "electron-builder": "^24.12.0",
     "electron-rebuild": "^3.2.9",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",
