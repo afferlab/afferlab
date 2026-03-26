@@ -1,5 +1,5 @@
 import fs from 'node:fs'
-import { getDB } from '../../db'
+import { getDBSync } from '../../db'
 import { ingestDocument } from '../../core/memory/ingest'
 import {
     AttachmentCapabilityError,
@@ -41,7 +41,7 @@ function toAttachmentPart(args: {
 }
 
 function findStorageKeyByAssetId(args: {
-    db: ReturnType<typeof getDB>
+    db: ReturnType<typeof getDBSync>
     conversationId: string
     assetId: string
 }): string | null {
@@ -124,7 +124,7 @@ function buildAttachmentReadError(args: {
 }
 
 export function ensureAttachmentBytes(args: {
-    db: ReturnType<typeof getDB>
+    db: ReturnType<typeof getDBSync>
     conversationId: string
     messageId?: string
     attachment: TurnAttachment
@@ -198,7 +198,7 @@ export function ensureAttachmentBytes(args: {
 }
 
 export function prepareAttachmentsForSend(args: {
-    db: ReturnType<typeof getDB>
+    db: ReturnType<typeof getDBSync>
     conversationId: string
     messageId?: string
     attachments: TurnAttachment[]
@@ -286,7 +286,7 @@ export function prepareAttachmentInMain(input: PrepareAttachmentPayload): Prepar
 }
 
 export async function materializeAttachmentParts(args: {
-    db: ReturnType<typeof getDB>
+    db: ReturnType<typeof getDBSync>
     conversationId: string
     userMessageId: string
     attachments: TurnAttachment[]

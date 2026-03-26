@@ -15,8 +15,8 @@ import type {
 } from '../../../contracts/index'
 
 export function registerMessageIPC() {
-    ipcMain.handle(IPC.GET_MESSAGES, (_e, conversationId: string) => {
-        const db = getDB()
+    ipcMain.handle(IPC.GET_MESSAGES, async (_e, conversationId: string) => {
+        const db = await getDB()
 
         const rows = db.prepare(`
             SELECT * FROM chat_items
@@ -65,8 +65,8 @@ export function registerMessageIPC() {
         return out
     })
 
-    ipcMain.handle(IPC.GET_CHAT_ITEMS, (_e, conversationId: string) => {
-        const db = getDB()
+    ipcMain.handle(IPC.GET_CHAT_ITEMS, async (_e, conversationId: string) => {
+        const db = await getDB()
         return db.prepare(`
             SELECT * FROM chat_items
             WHERE conversation_id = ?

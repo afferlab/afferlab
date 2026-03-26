@@ -277,6 +277,6 @@ app.whenReady().then(async () => {
 
   registerDefaultEmbeddingsProviders()
   initDB()
-  const appSettings = getAppSettings(getDB())
+  const appSettings = getAppSettings(await getDB())
   applyNativeTheme(isThemeSource(appSettings.theme_mode) ? appSettings.theme_mode : 'system')
 })

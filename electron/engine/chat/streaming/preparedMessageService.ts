@@ -1,4 +1,4 @@
-import { getDB } from '../../../db'
+import { getDBSync } from '../../../db'
 import { resolveModelConfig } from '../../../core/models/modelRegistry'
 import { hydrateMessagePartsWithAssetData } from '../../../core/attachments/hydrateMessageParts'
 import {
@@ -17,7 +17,7 @@ import type {
     UIMessage,
 } from '../../../../contracts/index'
 
-type DB = ReturnType<typeof getDB>
+type DB = ReturnType<typeof getDBSync>
 
 export type PayloadSummary = {
     partsCount: number

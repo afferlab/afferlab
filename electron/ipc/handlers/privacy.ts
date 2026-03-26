@@ -44,7 +44,7 @@ export function registerPrivacyIPC() {
     })
 
     ipcMain.handle(IPC.RESET_STRATEGIES, async () => {
-        const db = getDB()
+        const db = await getDB()
         db.prepare(`DELETE FROM strategies WHERE source != 'builtin'`).run()
         db.prepare(`DELETE FROM strategy_overrides WHERE strategy_id NOT IN (SELECT id FROM strategies)`).run()
         const remaining = listStrategies(db)

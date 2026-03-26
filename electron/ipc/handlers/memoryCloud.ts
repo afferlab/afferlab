@@ -28,7 +28,7 @@ function errorToLog(err: unknown): string {
 export function registerMemoryCloudIPC() {
     const assertMemoryCloudEnabled = async (conversationId: string): Promise<StrategyRecord> => {
         if (!conversationId) throw new Error('conversationId required')
-        const db = getDB()
+        const db = await getDB()
         const conversation = db.prepare(`SELECT id, strategy_id FROM conversations WHERE id = ?`)
             .get(conversationId) as { id?: string; strategy_id?: string | null } | undefined
         if (!conversation?.id) throw new Error('conversation not found')
@@ -47,8 +47,8 @@ export function registerMemoryCloudIPC() {
         return resolved.strategy
     }
 
-    const resolveAssetPath = (conversationId: string, assetId: string): string => {
-        const db = getDB()
+    const resolveAssetPath = async (conversationId: string, assetId: string): Promise<string> => {
+        const db = await getDB()
         const row = db.prepare(`
             SELECT uri, storage_backend
             FROM memory_assets
@@ -90,7 +90,7 @@ export function registerMemoryCloudIPC() {
         })
         try {
             const strategy = await assertMemoryCloudEnabled(payload.conversationId)
-            const db = getDB()
+            const db = await getDB()
             const result = await ingestDocument(db, {
                 ...payload,
                 options: {
@@ -134,7 +134,7 @@ export function registerMemoryCloudIPC() {
         log('info', '[MEMORY_CLOUD][ipc_list_assets]', { conversationId: args.conversationId })
         try {
             const strategy = await assertMemoryCloudEnabled(args.conversationId)
-            const db = getDB()
+            const db = await getDB()
             const result = listAssets(db, { conversationId: args.conversationId })
             log('info', '[MEMORY_CLOUD][ipc_list_assets_done]', {
                 conversationId: args.conversationId,
@@ -160,7 +160,7 @@ export function registerMemoryCloudIPC() {
         })
         try {
             const strategy = await assertMemoryCloudEnabled(args.conversationId)
-            const db = getDB()
+            const db = await getDB()
             const result = readAsset(db, {
                 conversationId: args.conversationId,
                 assetId: args.assetId,
@@ -191,7 +191,7 @@ export function registerMemoryCloudIPC() {
         })
         try {
             const strategy = await assertMemoryCloudEnabled(args.conversationId)
-            const db = getDB()
+            const db = await getDB()
             deleteAsset(db, { conversationId: args.conversationId, assetId: args.assetId })
             touchConversation(db, args.conversationId)
             const strategyHost = new StrategyHost(db)
@@ -221,7 +221,7 @@ export function registerMemoryCloudIPC() {
             assetId: args.assetId,
         })
         await assertMemoryCloudEnabled(args.conversationId)
-        const filePath = resolveAssetPath(args.conversationId, args.assetId)
+        const filePath = await resolveAssetPath(args.conversationId, args.assetId)
         const error = await shell.openPath(filePath)
         if (error) {
             throw new Error(error)
@@ -235,7 +235,7 @@ export function registerMemoryCloudIPC() {
             assetId: args.assetId,
         })
         await assertMemoryCloudEnabled(args.conversationId)
-        const filePath = resolveAssetPath(args.conversationId, args.assetId)
+        const filePath = await resolveAssetPath(args.conversationId, args.assetId)
         shell.showItemInFolder(filePath)
         return { ok: true as const }
     })

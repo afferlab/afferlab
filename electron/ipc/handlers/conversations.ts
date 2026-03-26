@@ -8,8 +8,8 @@ import { getStrategyOrFallback } from '../../core/strategy/strategyRegistry';
 import { startStrategySession } from '../../core/strategy/strategySessionLedger';
 
 export function registerConversationIPC() {
-    ipcMain.handle(IPC.CREATE_CONVERSATION, (_e, { model } = {}) => {
-        const db = getDB();
+    ipcMain.handle(IPC.CREATE_CONVERSATION, async (_e, { model } = {}) => {
+        const db = await getDB();
         const id = uuidv4();
         const now = Date.now();
         const title = 'New conversation';
@@ -40,8 +40,8 @@ export function registerConversationIPC() {
         return { id, title, created_at: now, title_source: 'default' };
     });
 
-    ipcMain.handle(IPC.GET_ALL_CONVERSATIONS, () => {
-        const db = getDB();
+    ipcMain.handle(IPC.GET_ALL_CONVERSATIONS, async () => {
+        const db = await getDB();
         return db.prepare(`
       SELECT id, title, title_source, created_at, updated_at, model, strategy_id, archived, summary, pinned
       FROM conversations
@@ -49,13 +49,13 @@ export function registerConversationIPC() {
     `).all();
     });
 
-    ipcMain.handle(IPC.DELETE_CONVERSATION, (_e, id: string) => {
-        const db = getDB();
+    ipcMain.handle(IPC.DELETE_CONVERSATION, async (_e, id: string) => {
+        const db = await getDB();
         db.prepare(`DELETE FROM conversations WHERE id = ?`).run(id);
     });
 
-    ipcMain.handle(IPC.RESET_CONVERSATION_HISTORY, (_e, conversationId: string) => {
-        const db = getDB();
+    ipcMain.handle(IPC.RESET_CONVERSATION_HISTORY, async (_e, conversationId: string) => {
+        const db = await getDB();
         const now = Date.now();
         const resetTxn = db.transaction((convId: string, ts: number) => {
             db.prepare(`DELETE FROM messages WHERE conversation_id = ?`).run(convId);
@@ -88,14 +88,14 @@ export function registerConversationIPC() {
         return { ok: true, updatedAt: now };
     });
 
-    ipcMain.handle(IPC.RENAME_CONVERSATION, (_e, id: string, title: string) => {
-        const db = getDB();
+    ipcMain.handle(IPC.RENAME_CONVERSATION, async (_e, id: string, title: string) => {
+        const db = await getDB();
         db.prepare(`UPDATE conversations SET title = ?, title_source = 'user', updated_at = ? WHERE id = ?`)
             .run(title, Date.now(), id);
     });
 
-    ipcMain.handle(IPC.UPDATE_CONVERSATION_MODEL, (_e, id: string, model: string) => {
-        const db = getDB();
+    ipcMain.handle(IPC.UPDATE_CONVERSATION_MODEL, async (_e, id: string, model: string) => {
+        const db = await getDB();
         db.prepare(`UPDATE conversations SET model = ? WHERE id = ?`)
             .run(model, id);
         db.prepare(`UPDATE app_settings SET last_used_model_id = ?, updated_at = ? WHERE id = 'singleton'`)

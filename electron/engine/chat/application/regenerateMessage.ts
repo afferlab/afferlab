@@ -17,7 +17,7 @@ function toTurnAttachmentKind(part: Extract<MessageContentPart, { type: 'file' |
 }
 
 function loadOriginalUserInput(args: {
-    db: ReturnType<typeof getDB>
+    db: Awaited<ReturnType<typeof getDB>>
     userMessageId: string
 }): {
     inputText: string
@@ -68,7 +68,7 @@ export async function executeRegenerateMessage(args: {
     modelId?: string
     webContentsId?: number
 }): Promise<StartGenResponse> {
-    const db = getDB()
+    const db = await getDB()
     const now = Date.now()
     const traceId = uuidv4()
     const trace: StreamTimingTrace = { t0: now }

@@ -183,7 +183,7 @@ export async function saveStrategyDev(input: StrategyDevSaveRequest): Promise<St
         } catch (err) {
             sourceError = err instanceof Error ? err.message : String(err)
         }
-        const db = getDB()
+        const db = await getDB()
         const devId = `dev:${crypto.createHash('sha256').update(filePath).digest('hex').slice(0, 16)}`
         const devKey = `dev-${devId.split(':')[1]}`
         const devRoot = path.join(app.getPath('userData'), 'strategies', 'dev', devId.split(':')[1])
@@ -273,7 +273,7 @@ export async function reloadStrategyDev(input: StrategyDevReloadRequest): Promis
         } catch (err) {
             sourceError = err instanceof Error ? err.message : String(err)
         }
-        const db = getDB()
+        const db = await getDB()
         const existing = listStrategies(db).find((row) => row.id === strategyId)
         if (!existing) return { ok: false, error: 'strategy not found' }
         if (existing.source !== 'dev') return { ok: false, error: 'strategy is not dev' }
@@ -361,7 +361,7 @@ export async function getStrategyDevSnapshot(input: StrategyDevSnapshotRequest):
     try {
         const strategyId = input?.strategyId
         if (!strategyId) return { ok: false, error: 'strategyId required' }
-        const db = getDB()
+        const db = await getDB()
         const existing = listStrategies(db).find((row) => row.id === strategyId)
         if (!existing) return { ok: false, error: 'strategy not found' }
         if (existing.source !== 'dev') return { ok: false, error: 'strategy is not dev' }
@@ -398,7 +398,7 @@ export async function openStrategyDevChat(
     input: StrategyDevOpenChatRequest,
     webContentsId?: number,
 ): Promise<StrategyDevOpenChatResult> {
-    const db = getDB()
+    const db = await getDB()
     const strategyId = input?.strategyId
     if (!strategyId) throw new Error('strategyId required')
 
@@ -451,7 +451,7 @@ export async function openStrategyDevChat(
 export async function openStrategyDevSourceFolder(
     input: StrategyDevOpenSourceFolderRequest,
 ): Promise<StrategyDevOpenSourceFolderResult> {
-    const db = getDB()
+    const db = await getDB()
     const strategyId = input?.strategyId
     if (!strategyId) throw new Error('strategyId required')
 
@@ -472,7 +472,7 @@ export async function recordStrategyDevTest(input: {
     status: 'passed' | 'failed'
     diagnostics?: StrategyDevDiagnostic[]
 }) {
-    const db = getDB()
+    const db = await getDB()
     if (!input?.strategyId) throw new Error('strategyId required')
     const existing = listStrategies(db).find((row) => row.id === input.strategyId)
     if (!existing) throw new Error('strategy not found')
@@ -500,7 +500,7 @@ export async function recordStrategyDevTest(input: {
 }
 
 export async function removeStrategyDev(input: { strategyId: string }) {
-    const db = getDB()
+    const db = await getDB()
     const strategyId = input?.strategyId
     if (!strategyId) throw new Error('strategyId required')
     const victim = listStrategies(db).find((row) => row.id === strategyId)

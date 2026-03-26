@@ -8,7 +8,7 @@ async function main(): Promise<void> {
     initDB()
 
     try {
-        await runMemorySmoke(getDB())
+        await runMemorySmoke(await getDB())
         console.log('PASS')
         closeDB()
         app.quit()

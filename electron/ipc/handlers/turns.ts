@@ -53,8 +53,8 @@ export function registerTurnIPC() {
         }),
     )
 
-    ipcMain.handle('get-turn-answers', (_e, turnId: string) => {
-        const db = getDB()
+    ipcMain.handle('get-turn-answers', async (_e, turnId: string) => {
+        const db = await getDB()
         return getTurnAnswers(db, turnId)
     })
 }

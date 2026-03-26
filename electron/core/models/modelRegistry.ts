@@ -14,7 +14,7 @@ import type {
 import { loadModelsSync, invalidateModelsCache } from '../../config/loadModels'
 import { getProviderDefaults, loadProviderSettings } from '../../config/providerSettings'
 import { getProviderNativeFileCapabilities, hasProvider, providerSupportsComplete } from '../../llm'
-import { getDB } from '../../db'
+import { getDBSync } from '../../db'
 import {
     getAppSettings,
     getModelDefaultParams,
@@ -186,7 +186,7 @@ function setDynamicModelCache(list: LLMModelConfig[]): void {
 
 function ensurePersistedDynamicModelsLoaded(): void {
     if (persistedDynamicCacheLoaded) return
-    const persisted = listPersistedLocalProviderModels(getDB())
+    const persisted = listPersistedLocalProviderModels(getDBSync())
     setDynamicModelCache(persisted)
     persistedDynamicCacheLoaded = true
 }
@@ -198,7 +198,7 @@ export async function refreshProviderModels(): Promise<void> {
         ollama: fetchOllamaModels,
         lmstudio: fetchLmStudioModels,
     }
-    const db = getDB()
+    const db = getDBSync()
     const customModelIds = new Set(listPersistedCustomProviderModelIds(db))
     const customModels = dynamicCache.filter((model) => customModelIds.has(model.id))
     const previousByProvider = new Map<DynamicProviderId, LLMModelConfig[]>()
@@ -234,7 +234,7 @@ export async function refreshProviderModels(): Promise<void> {
 }
 
 export function loadLocalSettings(): ModelSettings {
-    const db = getDB()
+    const db = getDBSync()
     migrateLegacyModelSettings(db)
     const app = getAppSettings(db)
     const overrides = listModelOverrides(db)
@@ -276,7 +276,7 @@ export function loadLocalSettings(): ModelSettings {
 }
 
 export function saveLocalSettings(settings: ModelSettings): void {
-    const db = getDB()
+    const db = getDBSync()
     for (const [modelId, override] of Object.entries(settings.modelOverrides ?? {})) {
         const requirements: Record<string, unknown> = {}
         if (override.endpointOverride) requirements.baseUrl = override.endpointOverride
@@ -422,7 +422,7 @@ export function addPersistedProviderModel(args: {
         name: modelName || modelId,
         source: 'custom',
     })
-    upsertPersistedCustomProviderModel(getDB(), providerId, model)
+    upsertPersistedCustomProviderModel(getDBSync(), providerId, model)
     persistedDynamicCacheLoaded = false
     ensurePersistedDynamicModelsLoaded()
     return loadRepoModels()
@@ -442,7 +442,7 @@ export function updatePersistedProviderModel(args: {
     if (!modelId) throw new Error('modelId missing')
     if (!nextModelId) throw new Error('nextModelId missing')
 
-    const db = getDB()
+    const db = getDBSync()
     const existing = db.prepare(`
         SELECT source
         FROM local_provider_models
@@ -502,7 +502,7 @@ export function deletePersistedProviderModel(args: {
     if (!providerId) throw new Error('providerId missing')
     if (!modelId) throw new Error('modelId missing')
 
-    const db = getDB()
+    const db = getDBSync()
     const existing = db.prepare(`
         SELECT source
         FROM local_provider_models
@@ -672,7 +672,7 @@ export function getModels(): LLMModelConfig[] {
 
 export function getModelById(id: string): LLMModelConfig | undefined {
     const settings = loadLocalSettings()
-    const globalDefaults = getModelDefaultParams(getDB())
+    const globalDefaults = getModelDefaultParams(getDBSync())
     const base = loadRepoModels().find(m => m.id === id)
     if (!base) return undefined
     const override = settings.modelOverrides[id]
@@ -693,7 +693,7 @@ export function resolveModelConfig(args: {
     conversationId?: string
     runtimeOverrides?: ResolveModelRuntimeOverrides
 }): ResolvedModelConfig {
-    const db = getDB()
+    const db = getDBSync()
     migrateLegacyModelSettings(db)
     const settings = loadLocalSettings()
     const globalDefaults = getModelDefaultParams(db)
@@ -774,11 +774,11 @@ export function listModelsWithStatus(kind?: ModelDefinition['kind']): ModelWithS
 }
 
 export function getCustomModelIds(): Set<string> {
-    return new Set(listPersistedCustomProviderModelIds(getDB()))
+    return new Set(listPersistedCustomProviderModelIds(getDBSync()))
 }
 
 export function getProviderConfigForModel(modelId: string): ProviderConfig {
-    const db = getDB()
+    const db = getDBSync()
     const overrides = listModelOverrides(db)
     const row = overrides.find(o => o.model_id === modelId)
     const req = safeJson<Record<string, unknown>>(row?.requirements_json, {})
@@ -859,7 +859,7 @@ export function getModelOrFallback(modelId?: string | null): ModelResolution {
 }
 
 export function getConversationModelOrFallback(conversationId: string): ModelResolution {
-    const db = getDB()
+    const db = getDBSync()
     const row = db.prepare('SELECT model FROM conversations WHERE id = ?')
         .get(conversationId) as { model?: string } | undefined
     return getModelOrFallback(row?.model ?? DEFAULT_MODEL_ID)

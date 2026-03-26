@@ -66,7 +66,7 @@ async function expectMemoryDisabled(label: string, fn: () => Promise<unknown>, c
 }
 
 export async function runStrategyMemorySmoke(): Promise<void> {
-    const db = getDB()
+    const db = await getDB()
     const ctx = createConversationForSmoke(db)
     log('conversation:create', ctx)
 

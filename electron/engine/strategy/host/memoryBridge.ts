@@ -6,7 +6,7 @@ import { strategyMemoryIngest, strategyMemoryReadAsset, strategyMemorySearch } f
 export function createMemoryBridge() {
     return {
         executeMemorySearch: async ({ conversationId, ...req }: MemoryChunkSearchRequest & { conversationId: string }) => {
-            const db = getDB()
+            const db = await getDB()
             return strategyMemorySearch(db, {
                 conversationId,
                 query: req.query,
@@ -18,24 +18,24 @@ export function createMemoryBridge() {
             })
         },
         executeMemoryListAssets: async ({ conversationId }: { conversationId: string }) => {
-            const db = getDB()
+            const db = await getDB()
             return listAssets(db, { conversationId })
         },
         executeMemoryReadAsset: async ({ conversationId, assetId, maxChars }: { conversationId: string; assetId: string; maxChars?: number }) => {
-            const db = getDB()
+            const db = await getDB()
             return strategyMemoryReadAsset(db, { conversationId, assetId, maxChars })
         },
         executeMemoryDeleteAsset: async ({ conversationId, assetId }: { conversationId: string; assetId: string }) => {
-            const db = getDB()
+            const db = await getDB()
             deleteAsset(db, { conversationId, assetId })
             return { ok: true as const }
         },
         ingestDocument: async (req: MemoryIngestRequest) => {
-            const db = getDB()
+            const db = await getDB()
             return strategyMemoryIngest(db, req)
         },
         memoryQuery: async ({ conversationId, options }: { conversationId: string; options?: MemoryQueryOptions }) => {
-            const db = getDB()
+            const db = await getDB()
             return queryMemoryRecords(db, {
                 conversationId,
                 tags: options?.tags,
@@ -46,7 +46,7 @@ export function createMemoryBridge() {
             })
         },
         memoryRemoveMemory: async ({ conversationId, memoryId }: { conversationId: string; memoryId: string }) => {
-            const db = getDB()
+            const db = await getDB()
             const deleted = deleteMemoryItem(db, { conversationId, memoryId })
             return { deleted }
         },

@@ -42,7 +42,7 @@ export function buildStrategyHostHandlers(args: {
         getHistory: async ({ conversationId, turnId }) => {
             const cached = args.historyCache.get(historyKey(conversationId, turnId))
             if (turnId) {
-                const db = getDB()
+                const db = await getDB()
                 const row = db.prepare(`
                     SELECT user_message_id, tseq
                     FROM turns
@@ -65,11 +65,11 @@ export function buildStrategyHostHandlers(args: {
             }
 
             if (cached) return cached
-            const db = getDB()
+            const db = await getDB()
             return getMainlineHistory(db, { conversationId }) as UIMessage[]
         },
         getTurnUserInput: async ({ conversationId, turnId }) => {
-            const db = getDB()
+            const db = await getDB()
             const row = db.prepare(`
                 SELECT m.content AS content, m.content_parts AS content_parts
                 FROM turns t
@@ -105,7 +105,7 @@ export function buildStrategyHostHandlers(args: {
             if (typeof name !== 'string') {
                 throw new Error('tool name missing')
             }
-            const db = getDB()
+            const db = await getDB()
             const registry = createToolRegistry(db)
             const result = await registry.executeToolCall(
                 { conversationId, turnId },
@@ -115,7 +115,7 @@ export function buildStrategyHostHandlers(args: {
         },
         ...createMemoryBridge(),
         stateGet: async ({ conversationId, strategyId, key }) => {
-            const db = getDB()
+            const db = await getDB()
             return getStrategyState(db, {
                 strategyId,
                 scopeType: 'conversation',
@@ -124,7 +124,7 @@ export function buildStrategyHostHandlers(args: {
             })
         },
         stateSet: async ({ conversationId, strategyId, key, value }) => {
-            const db = getDB()
+            const db = await getDB()
             setStrategyState(db, {
                 strategyId,
                 scopeType: 'conversation',
@@ -135,7 +135,7 @@ export function buildStrategyHostHandlers(args: {
             return { ok: true }
         },
         stateDelete: async ({ conversationId, strategyId, key }) => {
-            const db = getDB()
+            const db = await getDB()
             deleteStrategyState(db, {
                 strategyId,
                 scopeType: 'conversation',
@@ -145,7 +145,7 @@ export function buildStrategyHostHandlers(args: {
             return { ok: true }
         },
         stateHas: async ({ conversationId, strategyId, key }) => {
-            const db = getDB()
+            const db = await getDB()
             return hasStrategyState(db, {
                 strategyId,
                 scopeType: 'conversation',
@@ -159,12 +159,12 @@ export function buildStrategyHostHandlers(args: {
                 conversationId,
                 runtimeOverrides: temperature == null ? undefined : { params: { temperature } },
             })
-            const mappedTools = await resolveToolDefs(getDB(), conversationId, tools, toolChoice)
+            const mappedTools = await resolveToolDefs(await getDB(), conversationId, tools, toolChoice)
             const content = await callLLMUniversalNonStream(resolved, toUiMessages(conversationId, messages), mappedTools)
             return { role: 'assistant', content: content ?? '' } as LLMMessage
         },
         runLLMLoop: async ({ conversationId, turnId, model, messages, tools, toolChoice, maxRounds, temperature }) => {
-            const mappedTools = await resolveToolDefs(getDB(), conversationId, tools, toolChoice)
+            const mappedTools = await resolveToolDefs(await getDB(), conversationId, tools, toolChoice)
             const callMessages = toUiMessages(conversationId, messages)
             const toolResults = new Map<string, {
                 name: string
@@ -184,7 +184,7 @@ export function buildStrategyHostHandlers(args: {
                 {
                     maxRounds,
                     onToolCall: async (call) => {
-                        const db = getDB()
+                        const db = await getDB()
                         const registry = createToolRegistry(db)
                         const allowed = mappedTools.map((tool) => tool.name)
                         if (!allowed.includes(call.name)) {

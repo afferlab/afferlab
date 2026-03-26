@@ -7,7 +7,7 @@ async function main(): Promise<void> {
     initDB()
 
     try {
-        await runStrategySwitchSmoke(getDB())
+        await runStrategySwitchSmoke(await getDB())
         console.log('PASS')
         closeDB()
         app.quit()

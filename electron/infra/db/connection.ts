@@ -12,39 +12,55 @@ const BetterSqlite3 = require('better-sqlite3') as typeof import('better-sqlite3
 
 let db: Database | null = null
 let dbClosing = false
+let dbReady: Promise<void> | null = null
 
 function resolveDbPath(): string {
     return path.join(app.getPath('userData'), 'chat.db')
 }
 
-export function initDB(): Database {
-    if (db) return db
-    dbClosing = false
-    const resolvedPath = resolveDbPath()
-    console.log(`[db] opening ${resolvedPath}`)
-    fs.mkdirSync(path.dirname(resolvedPath), { recursive: true })
-    const instance = new BetterSqlite3(resolvedPath)
+export function initDB(): Promise<void> {
+    if (dbReady) return dbReady
 
-    instance.pragma('journal_mode = WAL')
-    instance.pragma('synchronous = NORMAL')
-    instance.pragma('temp_store = MEMORY')
-    instance.pragma('foreign_keys = ON')
-    instance.pragma('busy_timeout = 5000')
+    dbReady = (async () => {
+        if (db) return
 
-    initializeVectorSupport(instance)
-    const currentVersion = ensureSchema(instance)
-    runMigrations(instance, currentVersion)
+        dbClosing = false
+        const resolvedPath = resolveDbPath()
+        console.log(`[db] opening ${resolvedPath}`)
+        fs.mkdirSync(path.dirname(resolvedPath), { recursive: true })
+        const instance = new BetterSqlite3(resolvedPath)
 
-    db = instance
-    console.log(`[db] ready ${resolvedPath}`)
+        instance.pragma('journal_mode = WAL')
+        instance.pragma('synchronous = NORMAL')
+        instance.pragma('temp_store = MEMORY')
+        instance.pragma('foreign_keys = ON')
+        instance.pragma('busy_timeout = 5000')
 
-    scheduleVectorSelfTest()
+        initializeVectorSupport(instance)
+        const currentVersion = ensureSchema(instance)
+        runMigrations(instance, currentVersion)
 
-    return instance
+        db = instance
+        console.log(`[db] ready ${resolvedPath}`)
+
+        scheduleVectorSelfTest()
+    })()
+
+    return dbReady
 }
 
-export function getDB(): Database {
-    if (!db) throw new Error('Database not initialized. Call initDB() before using getDB().')
+export async function getDB(): Promise<Database> {
+    if (!dbReady) {
+        throw new Error('initDB has not been called')
+    }
+    await dbReady
+    return db!
+}
+
+export function getDBSync(): Database {
+    if (!db) {
+        throw new Error('Database not initialized. Wait for initDB() before using getDBSync().')
+    }
     return db
 }
 

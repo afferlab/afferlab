@@ -15,7 +15,7 @@ import { getDB } from '../../db'
 
 export function registerModelsIPC() {
     ipcMain.handle(IPC.GET_MODELS, async () => {
-        const db = getDB()
+        const db = await getDB()
         await refreshProviderModels()
         const models = getEffectiveModels(db).map(({ model }) => model)
         return models.map((m) => ({ ...m, name: m.name ?? m.label })) as LLMModelConfig[]
@@ -32,9 +32,9 @@ export function registerModelsIPC() {
         return { ...settings, providers: {} as Record<string, ProviderConfig> }
     })
 
-    ipcMain.handle(IPC.UPDATE_PROVIDER_CONFIG, (_e, args: { provider: string; patch: ProviderConfig }) => {
+    ipcMain.handle(IPC.UPDATE_PROVIDER_CONFIG, async (_e, args: { provider: string; patch: ProviderConfig }) => {
         if (!args?.provider) throw new Error('provider missing')
-        const db = getDB()
+        const db = await getDB()
         const models = loadRepoModels().filter(m => m.provider === args.provider)
         for (const model of models) {
             const current = getProviderConfigForModel(model.id)
@@ -49,12 +49,12 @@ export function registerModelsIPC() {
         return { ok: true }
     })
 
-    ipcMain.handle(IPC.UPDATE_MODEL_OVERRIDE, (_e, args: { modelId: string; patch: ModelOverride }) => {
+    ipcMain.handle(IPC.UPDATE_MODEL_OVERRIDE, async (_e, args: { modelId: string; patch: ModelOverride }) => {
         if (!args?.modelId) throw new Error('modelId missing')
         const requirements: Record<string, unknown> = {}
         if (args.patch.endpointOverride !== undefined) requirements.baseUrl = args.patch.endpointOverride
         if (args.patch.providerOverride !== undefined) requirements.providerOverride = args.patch.providerOverride
-        const db = getDB()
+        const db = await getDB()
         void upsertModelOverride(db, {
             model_id: args.modelId,
             enabled: args.patch.enabled,
@@ -64,8 +64,8 @@ export function registerModelsIPC() {
         return { ok: true }
     })
 
-    ipcMain.handle(IPC.SET_DEFAULT_MODELS, (_e, defaults: { chatModelId?: string; embeddingModelId?: string }) => {
-        const db = getDB()
+    ipcMain.handle(IPC.SET_DEFAULT_MODELS, async (_e, defaults: { chatModelId?: string; embeddingModelId?: string }) => {
+        const db = await getDB()
         setAppSettingsPatch(db, { active_model_id: defaults.chatModelId })
         return { ok: true }
     })

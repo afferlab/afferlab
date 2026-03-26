@@ -38,7 +38,7 @@ export async function executeSendMessage(args: {
     message: SendMessagePayload
     webContentsId?: number
 }): Promise<StartGenResponse> {
-    const db = getDB()
+    const db = await getDB()
     const msg = args.message
     const now = Date.now()
     const trace: StreamTimingTrace = { t0: now }

@@ -66,7 +66,7 @@ export async function executeRewriteFromTurn(args: {
     traceId?: string
     webContentsId?: number
 }): Promise<StartGenResponse> {
-    const db = getDB()
+    const db = await getDB()
     const now = Date.now()
     const resolvedTraceId = typeof args.traceId === 'string' && args.traceId.trim().length > 0
         ? args.traceId.trim()

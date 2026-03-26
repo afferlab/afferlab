@@ -1,4 +1,4 @@
-import { getDB } from '../../../db'
+import { getDBSync } from '../../../db'
 import { switchConversationStrategy } from '../../../core/strategy/switchStrategy'
 import { updateStrategySession } from '../../../core/strategy/strategySessions'
 import { cancelReplayJob } from '../../../core/strategy/replayManager'
@@ -68,7 +68,7 @@ async function toStrategyInfo(
 }
 
 function getUsageCounts(): StrategyUsageCounts {
-    const db = getDB()
+    const db = getDBSync()
     const rows = db.prepare(`
         SELECT strategy_id, COUNT(*) AS total
         FROM conversations
@@ -83,14 +83,14 @@ function getUsageCounts(): StrategyUsageCounts {
 }
 
 function resolveStrategyById(strategyId: string): StrategyRecord | null {
-    const strategies = listStrategies(getDB())
+    const strategies = listStrategies(getDBSync())
     return strategies.find((strategy) => strategy.id === strategyId) ?? null
 }
 
 function getConversationStrategyLockState(
     conversationId: string,
 ): { id: string; strategy_id?: string | null; strategy_key?: string | null; strategy_version?: string | null } | null {
-    const conversation = getDB().prepare(`
+    const conversation = getDBSync().prepare(`
         SELECT id, strategy_id, strategy_key, strategy_version
         FROM conversations
         WHERE id = ?
@@ -135,7 +135,7 @@ function assertConversationStrategyMutable(
 }
 
 function reassignConversations(args: { fromId: string; to: StrategyRecord }): number {
-    const result = getDB().prepare(`
+    const result = getDBSync().prepare(`
         UPDATE conversations
         SET strategy_id = ?,
             strategy_key = ?,
@@ -156,7 +156,7 @@ export function setConversationStrategy(req: StrategySwitchRequest, webContentsI
     if (!req.strategyKey) throw new Error('strategyKey required')
     if (!req.strategyVersion) throw new Error('strategyVersion required')
 
-    return switchConversationStrategy(getDB(), {
+    return switchConversationStrategy(getDBSync(), {
         conversationId,
         mode: req.mode,
         strategyKey: req.strategyKey,
@@ -166,7 +166,7 @@ export function setConversationStrategy(req: StrategySwitchRequest, webContentsI
 }
 
 export function cancelStrategyReplay(sessionId: string) {
-    const db = getDB()
+    const db = getDBSync()
     const ok = cancelReplayJob(sessionId)
     if (!ok) {
         updateStrategySession(db, sessionId, {
@@ -190,7 +190,7 @@ export function updateConversationStrategy(
     })
 
     const mode = args.mode ?? 'no_replay'
-    const res = switchConversationStrategy(getDB(), {
+    const res = switchConversationStrategy(getDBSync(), {
         conversationId: args.conversationId,
         mode,
         strategyId: args.strategyId,
@@ -207,7 +207,7 @@ export function updateConversationStrategy(
 }
 
 export async function listStrategyInfo(): Promise<StrategyInfo[]> {
-    const db = getDB()
+    const db = getDBSync()
     const effective = getEffectiveStrategies(db)
     const effectiveById = new Map(
         effective.map((entry) => [entry.id, { manifest: entry.manifest, enabled: entry.enabled }]),
@@ -217,7 +217,7 @@ export async function listStrategyInfo(): Promise<StrategyInfo[]> {
 }
 
 export function getActiveStrategy(conversationId: string): StrategyActiveInfo {
-    const db = getDB()
+    const db = getDBSync()
     if (!conversationId) throw new Error('conversationId required')
     const conversation = db.prepare(`SELECT id, strategy_id FROM conversations WHERE id = ?`)
         .get(conversationId) as { id?: string; strategy_id?: string | null } | undefined
@@ -240,7 +240,7 @@ export function getActiveStrategy(conversationId: string): StrategyActiveInfo {
 }
 
 export function switchStrategy(args: StrategySwitchInput, webContentsId?: number): StrategyActiveInfo {
-    const db = getDB()
+    const db = getDBSync()
     if (!args?.conversationId) throw new Error('conversationId required')
     if (!args?.strategyId) throw new Error('strategyId required')
     assertConversationStrategyMutable({
@@ -271,11 +271,11 @@ export function switchStrategy(args: StrategySwitchInput, webContentsId?: number
 }
 
 export function getStrategyPrefsSnapshot(): StrategyPrefs {
-    return getStrategyPrefs(getDB()) as StrategyPrefs
+    return getStrategyPrefs(getDBSync()) as StrategyPrefs
 }
 
 export function updateStrategyPrefs(next: StrategyPrefsInput) {
-    return setStrategyPrefs(getDB(), next)
+    return setStrategyPrefs(getDBSync(), next)
 }
 
 export function getStrategyUsageCounts(): StrategyUsageCounts {
@@ -284,7 +284,7 @@ export function getStrategyUsageCounts(): StrategyUsageCounts {
 
 export function getStrategyParams(input: { strategyId: string }): StrategyParams {
     if (!input?.strategyId) throw new Error('strategyId required')
-    return getStrategyOverrideParams(getDB(), input.strategyId) as StrategyParams
+    return getStrategyOverrideParams(getDBSync(), input.strategyId) as StrategyParams
 }
 
 export function setStrategyParams(input: { strategyId: string; params?: Record<string, unknown> }): StrategyParams {
@@ -292,14 +292,14 @@ export function setStrategyParams(input: { strategyId: string; params?: Record<s
     const params = (input.params && typeof input.params === 'object' && !Array.isArray(input.params))
         ? input.params
         : {}
-    return setStrategyOverrideParams(getDB(), {
+    return setStrategyOverrideParams(getDBSync(), {
         strategyId: input.strategyId,
         params,
     }) as StrategyParams
 }
 
 export function disableStrategy(input: StrategyDisableInput) {
-    const db = getDB()
+    const db = getDBSync()
     if (!input?.strategyId) throw new Error('strategyId required')
 
     const prefs = getStrategyPrefs(db)
@@ -320,7 +320,7 @@ export function disableStrategy(input: StrategyDisableInput) {
 }
 
 export function uninstallStrategy(input: StrategyDisableInput) {
-    const db = getDB()
+    const db = getDBSync()
     if (!input?.strategyId) throw new Error('strategyId required')
     if (!input?.reassignTo) throw new Error('reassignTo required')
     if (input.strategyId === input.reassignTo) throw new Error('reassignTo must differ from strategyId')

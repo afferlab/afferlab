@@ -1,6 +1,6 @@
 import { BrowserWindow } from 'electron'
 import type { ModelDefaultParams, SettingsBundle, ToolPermissions, UIMessage } from '../types'
-import { getDB } from '../../../db'
+import { getDBSync } from '../../../db'
 import {
     ensureDefaultToolSettings,
     getAppSettings,
@@ -68,7 +68,7 @@ function normalizeWebSearchPatch(input: unknown) {
 }
 
 export function getSettingsSnapshot() {
-    const db = getDB()
+    const db = getDBSync()
     migrateLegacyModelSettings(db)
     migrateLegacyToolSettings(db)
     ensureDefaultToolSettings(db)
@@ -126,7 +126,7 @@ export function updateAppSettings(patch: unknown) {
         }
     }
 
-    const db = getDB()
+    const db = getDBSync()
     log('info', '[SETTINGS][update]', { patch: nextPatch })
     const updated = setAppSettingsPatch(db, nextPatch)
     const persisted = getAppSettings(db)
@@ -136,11 +136,11 @@ export function updateAppSettings(patch: unknown) {
 }
 
 export function getModelDefaultSettings() {
-    return getModelDefaultParams(getDB())
+    return getModelDefaultParams(getDBSync())
 }
 
 export function setModelDefaultSettings(patch: Partial<ModelDefaultParams>) {
-    return setModelDefaultParams(getDB(), patch)
+    return setModelDefaultParams(getDBSync(), patch)
 }
 
 export function upsertSettingsModelOverride(input: {
@@ -150,7 +150,7 @@ export function upsertSettingsModelOverride(input: {
     requirements?: Record<string, unknown>
 }) {
     if (!input?.modelId) throw new Error('modelId missing')
-    const db = getDB()
+    const db = getDBSync()
     const updated = upsertModelOverride(db, {
         model_id: input.modelId,
         enabled: input.enabled,
@@ -168,7 +168,7 @@ export function upsertSettingsStrategyOverride(input: {
     allowlist?: string[]
 }) {
     if (!input?.strategyId) throw new Error('strategyId missing')
-    return upsertStrategyOverride(getDB(), {
+    return upsertStrategyOverride(getDBSync(), {
         strategy_id: input.strategyId,
         enabled: input.enabled,
         params: input.params ?? {},
@@ -178,20 +178,20 @@ export function upsertSettingsStrategyOverride(input: {
 
 export function setSettingsToolEnabled(args: { toolKey: string; enabled: boolean }) {
     if (!args?.toolKey) throw new Error('toolKey missing')
-    return setToolEnabled(getDB(), args.toolKey, args.enabled)
+    return setToolEnabled(getDBSync(), args.toolKey, args.enabled)
 }
 
 export function setSettingsToolPermission(args: { toolKey: string; permissions: ToolPermissions }) {
     if (!args?.toolKey) throw new Error('toolKey missing')
-    return setToolPermission(getDB(), args.toolKey, args.permissions ?? {})
+    return setToolPermission(getDBSync(), args.toolKey, args.permissions ?? {})
 }
 
 export function exportSettings() {
-    return exportSettingsBundle(getDB())
+    return exportSettingsBundle(getDBSync())
 }
 
 export function importSettings(bundle: SettingsBundle) {
-    importSettingsBundle(getDB(), bundle)
+    importSettingsBundle(getDBSync(), bundle)
     return { ok: true as const }
 }
 
@@ -261,7 +261,7 @@ export function setProviderModelOverride(args: {
 }) {
     if (!args?.providerId) throw new Error('providerId missing')
     if (!args?.modelId) throw new Error('modelId missing')
-    const db = getDB()
+    const db = getDBSync()
     const row = listModelOverrides(db).find((record) => record.model_id === args.modelId)
     const current = safeJson<Record<string, unknown>>(row?.params_json, {})
     const next: Record<string, unknown> = { ...current, ...(args.override ?? {}) }
@@ -278,7 +278,7 @@ export function setProviderModelOverride(args: {
 export function resetProviderModelOverride(args: { providerId: string; modelId: string }) {
     if (!args?.providerId) throw new Error('providerId missing')
     if (!args?.modelId) throw new Error('modelId missing')
-    upsertModelOverride(getDB(), {
+    upsertModelOverride(getDBSync(), {
         model_id: args.modelId,
         params: {},
     })

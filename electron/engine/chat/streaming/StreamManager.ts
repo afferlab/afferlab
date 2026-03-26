@@ -1,6 +1,6 @@
 // electron/engine/chat/streaming/StreamManager.ts
 import { EventEmitter } from 'node:events'
-import { getDB as realGetDB } from '../../../db'
+import { getDBSync as realGetDBSync } from '../../../db'
 import { TurnWriter } from '../../../core/turnWriter'
 import { LLMRunner } from '../../llm/llmRunner'
 import { callLLMUniversalNonStream, getProviderCtxSource } from '../../../llm'
@@ -35,7 +35,7 @@ import type { TurnAttachment } from '../../attachments/types'
 import type { LLMModelConfig, ToolDef } from '../../llm/types'
 import type { StrategyDevEvent } from '../../strategy/types'
 
-type DB = ReturnType<typeof realGetDB>
+type DB = ReturnType<typeof realGetDBSync>
 type Deps = {
     getDB: () => DB
     llmRunner: LLMRunner
@@ -85,7 +85,7 @@ export class StreamManager extends EventEmitter {
 
     constructor(deps?: Partial<Deps>) {
         super()
-        this.deps = { getDB: realGetDB, llmRunner: new LLMRunner(), flushEveryMs: 400, ...deps }
+        this.deps = { getDB: realGetDBSync, llmRunner: new LLMRunner(), flushEveryMs: 400, ...deps }
     }
 
     /** Whether the conversation is busy (single-lane execution). */

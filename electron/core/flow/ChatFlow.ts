@@ -37,7 +37,7 @@ export type StartTurnParams = {
 export async function startTurnFlow(p: StartTurnParams): Promise<void> {
     const { conversationId, model, history, turnId, forceWebSearch, attachments, inputText, mode } = p
 
-    const strategyHost = new StrategyHost(getDB())
+    const strategyHost = new StrategyHost(await getDB())
     const trace: StreamTimingTrace = p.trace ?? { t0: Date.now() }
     trace.t_ctx_start = Date.now()
     const built = await strategyHost.runContextBuild({
