@@ -84,6 +84,7 @@ export function registerMemoryCloudIPC() {
             conversationId: payload.conversationId,
             filename: payload.filename,
             mime: payload.mime,
+            mode: payload.options?.mode ?? 'raw',
             wait: payload.options?.wait,
             sizeBytes: payload.data?.byteLength ?? null,
         })
@@ -94,6 +95,7 @@ export function registerMemoryCloudIPC() {
                 ...payload,
                 options: {
                     ...(payload.options ?? {}),
+                    mode: payload.options?.mode ?? 'raw',
                     type: payload.options?.type ?? 'memory_cloud.document',
                 },
                 onProgress: (p) => {
