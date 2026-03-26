@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
-import type { StrategyModule } from '../../../contracts'
+import type { StrategyConfigSchema, StrategyHooks, StrategyMeta } from '../../../contracts'
 import { cloneValidatedConfigSchema } from '../../core/strategy/configSchema'
 
 const HOOK_NAMES = [
@@ -17,7 +17,13 @@ const HOOK_NAMES = [
 ] as const
 
 type HookName = typeof HOOK_NAMES[number]
-type HookMap = Partial<Record<HookName, StrategyModule['hooks'][HookName]>>
+export type RuntimeStrategyModule = {
+    meta: StrategyMeta
+    configSchema?: StrategyConfigSchema
+    hooks: StrategyHooks<Record<string, unknown>>
+}
+
+type HookMap = Partial<Record<HookName, RuntimeStrategyModule['hooks'][HookName]>>
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return Boolean(value && typeof value === 'object')
@@ -30,10 +36,10 @@ function collectExportKeys(mod: Record<string, unknown>): { moduleKeys: string[]
     return { moduleKeys, defaultKeys }
 }
 
-function getHookCandidate(source: Record<string, unknown> | null, name: HookName): StrategyModule['hooks'][HookName] | undefined {
+function getHookCandidate(source: Record<string, unknown> | null, name: HookName): RuntimeStrategyModule['hooks'][HookName] | undefined {
     if (!source) return undefined
     const value = source[name]
-    return typeof value === 'function' ? (value as StrategyModule['hooks'][HookName]) : undefined
+    return typeof value === 'function' ? (value as RuntimeStrategyModule['hooks'][HookName]) : undefined
 }
 
 function detectExports(mod: Record<string, unknown>): string[] {
@@ -59,7 +65,11 @@ function detectExports(mod: Record<string, unknown>): string[] {
     return Array.from(detected)
 }
 
-function normalizeStrategyModule(mod: Record<string, unknown>, entryPath: string): StrategyModule {
+function toStrategyConfigSchema(schema: unknown): StrategyConfigSchema {
+    return cloneValidatedConfigSchema(schema) as unknown as StrategyConfigSchema
+}
+
+function normalizeStrategyModule(mod: Record<string, unknown>, entryPath: string): RuntimeStrategyModule {
     const defaultExport = isRecord(mod.default) ? mod.default : null
     const meta = (isRecord(mod.meta) ? mod.meta : null)
         ?? (defaultExport && isRecord(defaultExport.meta) ? defaultExport.meta : null)
@@ -68,7 +78,7 @@ function normalizeStrategyModule(mod: Record<string, unknown>, entryPath: string
         ?? (defaultExport?.configSchema as unknown)
     const configSchema = rawConfigSchema == null
         ? undefined
-        : cloneValidatedConfigSchema(rawConfigSchema)
+        : toStrategyConfigSchema(rawConfigSchema)
 
     const hookSources: Array<Record<string, unknown> | null> = [
         isRecord(mod.hooks) ? (mod.hooks as Record<string, unknown>) : null,
@@ -100,9 +110,9 @@ function normalizeStrategyModule(mod: Record<string, unknown>, entryPath: string
     }
 
     return {
-        meta: meta as StrategyModule['meta'],
+        meta: meta as StrategyMeta,
         configSchema,
-        hooks: hooks as StrategyModule['hooks'],
+        hooks: hooks as StrategyHooks<Record<string, unknown>>,
     }
 }
 
@@ -136,7 +146,7 @@ function resolveEntryPath(entryPath: string): string {
     throw new Error(`[strategy-loader] entry_path not found: ${entryPath}`)
 }
 
-export async function loadStrategyModule(entryPath: string): Promise<StrategyModule> {
+export async function loadStrategyModule(entryPath: string): Promise<RuntimeStrategyModule> {
     if (!entryPath || typeof entryPath !== 'string') {
         throw new Error('[strategy-loader] entry_path missing')
     }

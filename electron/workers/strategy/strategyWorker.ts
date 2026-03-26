@@ -10,14 +10,13 @@ import type {
     Budget,
     Capabilities,
     Message,
-    StrategyModule,
     StrategyContextBuildOutput,
     StrategyContextBuildResult,
     StrategyDevEvent,
     StrategyDevEventPhase,
 } from '../../../contracts'
 import { hostClient } from './hostClient'
-import { loadStrategyModule } from './strategyLoader'
+import { loadStrategyModule, type RuntimeStrategyModule } from './strategyLoader'
 import { buildContext } from './buildContext'
 
 type RequestType = 'init' | 'contextBuild' | 'turnEnd' | 'cloudAdd' | 'cloudRemove' | 'toolCall' | 'replayTurn' | 'dispose'
@@ -70,7 +69,7 @@ type StrategyRequestPayload = {
     cloudPayload?: CloudAddPayload | CloudRemovePayload
 }
 
-let loadedStrategy: StrategyModule | null = null
+let loadedStrategy: RuntimeStrategyModule | null = null
 let loadedEntryPath: string | null = null
 let lastCtx: AfferLabContext | null = null
 let devMode = false
@@ -358,7 +357,7 @@ function snapshotContext(ctx: AfferLabContext): ContextSnapshot {
     }
 }
 
-async function ensureStrategy(payload?: StrategyRequestPayload): Promise<StrategyModule> {
+async function ensureStrategy(payload?: StrategyRequestPayload): Promise<RuntimeStrategyModule> {
     updateDevContext(payload)
     const entryPath = payload?.strategyEntryPath
     if (!entryPath) {
@@ -366,21 +365,22 @@ async function ensureStrategy(payload?: StrategyRequestPayload): Promise<Strateg
     }
     if (loadedStrategy && loadedEntryPath === entryPath) return loadedStrategy
     loadedStrategy = await loadStrategyModule(entryPath)
+    const strategy = loadedStrategy
     loadedEntryPath = entryPath
     metaEmitted = false
     emitStatus({ active: true, fallbackUsed: false, source: 'worker' })
-    if (devMode && loadedStrategy?.meta && !metaEmitted) {
+    if (devMode && strategy.meta && !metaEmitted) {
         emitDevEvent({
             type: 'meta',
             data: {
-                name: loadedStrategy.meta.name,
-                description: loadedStrategy.meta.description,
-                version: loadedStrategy.meta.version,
+                name: strategy.meta.name,
+                description: strategy.meta.description,
+                version: strategy.meta.version,
             },
         })
         metaEmitted = true
     }
-    if (loadedStrategy.hooks.onInit) {
+    if (strategy.hooks.onInit) {
         const ctx = payload?.conversationId
             ? await buildContext({
                 conversationId: payload.conversationId,
@@ -396,10 +396,10 @@ async function ensureStrategy(payload?: StrategyRequestPayload): Promise<Strateg
         if (ctx) {
             lastCtx = ctx
             emitDevEvent({ type: 'context', data: snapshotContext(ctx), phase: 'context' })
-            await loadedStrategy.hooks.onInit(ctx)
+            await strategy.hooks.onInit(ctx)
         }
     }
-    return loadedStrategy
+    return strategy
 }
 
 async function defaultToolCall(ctx: { conversationId: string; turnId: string; call: { id: string; name: string; args?: unknown } }): Promise<string> {

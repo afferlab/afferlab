@@ -2,7 +2,7 @@ import type { Database } from 'better-sqlite3'
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
-import type { StrategyManifest, StrategyRecord } from '../../../contracts/index'
+import type { StrategyConfigSchema, StrategyManifest, StrategyRecord } from '../../../contracts/index'
 import { getAppSettings, getStrategyPrefs, listStrategyOverrides } from '../settings/settingsStore'
 import { DEFAULT_STRATEGY_ID } from './strategyScope'
 import minimalStrategy, { configSchema as minimalConfigSchema } from '../../strategies/builtin/minimal'
@@ -22,6 +22,10 @@ type BuiltinStrategySeed = {
     manifest: StrategyManifest
 }
 
+function toManifestConfigSchema(schema: unknown): StrategyConfigSchema {
+    return cloneValidatedConfigSchema(schema) as unknown as StrategyConfigSchema
+}
+
 const BUILTIN_STRATEGIES: BuiltinStrategySeed[] = [
     {
         id: 'builtin:minimal',
@@ -34,8 +38,8 @@ const BUILTIN_STRATEGIES: BuiltinStrategySeed[] = [
         capabilities: {},
         default_allowlist: [],
         manifest: {
-            paramsSchema: cloneValidatedConfigSchema(minimalConfigSchema),
-            configSchema: cloneValidatedConfigSchema(minimalConfigSchema),
+            paramsSchema: toManifestConfigSchema(minimalConfigSchema),
+            configSchema: toManifestConfigSchema(minimalConfigSchema),
         },
     },
     {
@@ -49,8 +53,8 @@ const BUILTIN_STRATEGIES: BuiltinStrategySeed[] = [
         capabilities: { supportsMemoryIngest: true },
         default_allowlist: ['memories.*', 'builtin.web_search', 'builtin.web_fetch', 'mcp.*'],
         manifest: {
-            paramsSchema: cloneValidatedConfigSchema(memoryFirstConfigSchema),
-            configSchema: cloneValidatedConfigSchema(memoryFirstConfigSchema),
+            paramsSchema: toManifestConfigSchema(memoryFirstConfigSchema),
+            configSchema: toManifestConfigSchema(memoryFirstConfigSchema),
         },
     },
 ]

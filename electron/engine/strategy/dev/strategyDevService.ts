@@ -22,6 +22,7 @@ import { emitStrategyDevEvent } from './devEventBus'
 import { cloneValidatedConfigSchema } from '../../../core/strategy/configSchema'
 
 import type {
+    StrategyConfigSchema,
     StrategyDevCompileRequest,
     StrategyDevCompileResult,
     StrategyDevDiagnostic,
@@ -39,6 +40,10 @@ import type {
     StrategyManifest,
     StrategyRecord,
 } from '../../../../contracts/index'
+
+function toManifestConfigSchema(schema: unknown): StrategyConfigSchema {
+    return cloneValidatedConfigSchema(schema) as unknown as StrategyConfigSchema
+}
 
 function toErrorEntry(err: unknown): StrategyDevError {
     if (err instanceof Error) {
@@ -194,7 +199,7 @@ export async function saveStrategyDev(input: StrategyDevSaveRequest): Promise<St
         const description = meta.description
         const version = shortHash
         const now = Date.now()
-        const configSchema = cloneValidatedConfigSchema(input.paramsSchema)
+        const configSchema = toManifestConfigSchema(input.paramsSchema)
         const manifest: StrategyManifest = {
             paramsSchema: configSchema,
             configSchema: configSchema,
@@ -284,7 +289,7 @@ export async function reloadStrategyDev(input: StrategyDevReloadRequest): Promis
         const description = meta.description
         const version = shortHash
         const manifest = safeJson<StrategyManifest>(existing.manifest_json ?? '{}', {})
-        const configSchema = cloneValidatedConfigSchema(input.paramsSchema ?? manifest.configSchema ?? manifest.paramsSchema)
+        const configSchema = toManifestConfigSchema(input.paramsSchema ?? manifest.configSchema ?? manifest.paramsSchema)
         const nextManifest: StrategyManifest = {
             ...manifest,
             paramsSchema: configSchema,
