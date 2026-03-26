@@ -109,6 +109,8 @@ export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST
 
+const isMac = process.platform === 'darwin'
+
 let updaterStatus: UpdaterStatusSnapshot = { kind: 'idle' }
 let mainWindow: BrowserWindow | null = null
 let splashWindow: BrowserWindow | null = null
@@ -236,11 +238,15 @@ function openSplashWindow(): BrowserWindow {
 }
 
 function openStartupWindows(): void {
-    const splash = openSplashWindow()
+    const bounceId = isMac ? (app.dock.bounce as (type: string) => number)('indefinite') : null
+    const splash = isMac ? null : openSplashWindow()
     const win = openMainWindow()
 
     win.once('ready-to-show', () => {
-        if (!splash.isDestroyed()) {
+        if (isMac && bounceId !== null) {
+            app.dock.cancelBounce(bounceId)
+        }
+        if (splash && !splash.isDestroyed()) {
             splash.close()
         }
         if (!win.isDestroyed()) {
