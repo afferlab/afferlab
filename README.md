@@ -22,6 +22,7 @@
 <p align="center">
    Agent features are currently in development and will be released soon.
 </p>
+
 ---
 
 ## What is AfferLab
@@ -71,6 +72,7 @@ Strategy Engine
 
 ```bash
 git clone https://github.com/afferlab/afferlab
+cd afferlab
 pnpm install
 pnpm dev
 ```
@@ -84,9 +86,21 @@ This means native modules must be rebuilt against Electron’s ABI.
 
 This is handled automatically via:
 
-
-```bash
 pnpm install
+
+which triggers:
+
+electron-builder install-app-deps
+
+If you encounter errors like:
+
+NODE_MODULE_VERSION mismatch
+
+run:
+
+pnpm exec electron-builder install-app-deps
+
+to fix it.
 
 ---
 
