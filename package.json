@@ -91,7 +91,8 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "clean": "rimraf dist-electron",
-    "copy-config": "cpx \"electron/config/**/*\" dist-electron/config"
+    "copy-config": "cpx \"electron/config/**/*\" dist-electron/config",
+    "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

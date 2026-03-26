@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-   Agent features are in active development and coming soon.
+   Agent features are currently in development and will be released soon.
 </p>
 ---
 
@@ -74,6 +74,19 @@ git clone https://github.com/afferlab/afferlab
 pnpm install
 pnpm dev
 ```
+
+## Native Modules (Important)
+
+AfferLab uses native Node.js modules (e.g. `better-sqlite3`).
+
+Electron runs on a different Node.js runtime than your system Node version.  
+This means native modules must be rebuilt against Electron’s ABI.
+
+This is handled automatically via:
+
+
+```bash
+pnpm install
 
 ---
 
