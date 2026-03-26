@@ -239,7 +239,7 @@ function openSplashWindow(): BrowserWindow {
 
 
 function openStartupWindows(): void {
-    const bounceId = isMac ? (app.dock.bounce as (type: string) => number)('indefinite') : null
+    const bounceId = isMac ? app.dock.bounce('critical') : null
     const splash = isMac ? null : openSplashWindow()
     const win = openMainWindow()
 
@@ -270,13 +270,13 @@ app.whenReady().then(async () => {
 
   Menu.setApplicationMenu(menu)
 
-  registerDefaultEmbeddingsProviders()
-  initDB()
-  const appSettings = getAppSettings(getDB())
-  applyNativeTheme(isThemeSource(appSettings.theme_mode) ? appSettings.theme_mode : 'system')
-
   registerAllIPC()
   console.log('IPC registered')
 
   openStartupWindows()
+
+  registerDefaultEmbeddingsProviders()
+  initDB()
+  const appSettings = getAppSettings(getDB())
+  applyNativeTheme(isThemeSource(appSettings.theme_mode) ? appSettings.theme_mode : 'system')
 })
