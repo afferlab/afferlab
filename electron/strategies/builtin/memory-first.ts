@@ -56,7 +56,7 @@ const strategy = defineStrategy({
 
         if (attachments.length > 0) {
             ctx.slots.add(
-                'history',
+                'context',
                 [
                     {
                         role: 'user',
