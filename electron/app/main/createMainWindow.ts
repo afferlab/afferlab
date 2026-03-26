@@ -1,4 +1,4 @@
-import { BrowserWindow, type BrowserWindowConstructorOptions } from 'electron'
+import { BrowserWindow, screen, type BrowserWindowConstructorOptions } from 'electron'
 import path from 'node:path'
 
 export function createMainWindow(args: {
@@ -13,6 +13,7 @@ export function createMainWindow(args: {
         height: 720,
         minWidth: 750,
         minHeight: 500,
+        show: false,
         frame: true,
         transparent: true,
         backgroundColor: '#00000000',
@@ -38,4 +39,39 @@ export function createMainWindow(args: {
     }
 
     return win
+}
+
+export function createSplashWindow(args: {
+    publicPath: string
+}): BrowserWindow {
+    const width = 260
+    const height = 140
+    const splash = new BrowserWindow({
+        width,
+        height,
+        frame: false,
+        transparent: true,
+        resizable: false,
+        movable: true,
+        minimizable: false,
+        maximizable: false,
+        fullscreenable: false,
+        alwaysOnTop: true,
+        center: false,
+        skipTaskbar: true,
+        backgroundColor: '#00000000',
+        hasShadow: false,
+        webPreferences: {
+            devTools: false,
+        },
+    })
+
+    const { bounds } = screen.getPrimaryDisplay()
+    const x = Math.round(bounds.x + (bounds.width - width) / 2)
+    const y = Math.round(bounds.y + (bounds.height - height) / 2)
+    splash.setPosition(x, y)
+
+    void splash.loadFile(path.join(args.publicPath, 'splash.html'))
+
+    return splash
 }

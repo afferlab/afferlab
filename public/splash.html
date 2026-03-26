@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AfferLab</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Manrope", "Helvetica Neue", Arial, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        background: transparent;
+      }
+
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      .shell {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        background: #ffffff;
+        -webkit-app-region: drag;
+      }
+
+      .content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        text-align: center;
+      }
+
+      .logo {
+        width: 72px;
+        height: 72px;
+        object-fit: contain;
+      }
+
+      .label {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        color: #111111;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="content">
+        <img class="logo" src="./images/logo_black.svg" alt="AfferLab" />
+        <p class="label">Launching AfferLab...</p>
+      </section>
+    </main>
+  </body>
+</html>
